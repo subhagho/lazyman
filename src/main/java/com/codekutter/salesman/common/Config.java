@@ -1,5 +1,6 @@
 package com.codekutter.salesman.common;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.NonNull;
@@ -54,6 +55,21 @@ public class Config {
         }
 
         mapsDataDir = di.getAbsolutePath();
+    }
+
+    public String setupMapFile(@NonNull String mapname, boolean clear) throws Exception {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(mapname));
+        String fname = String.format("%s/%s", mapsDataDir, mapname);
+        File f = new File(fname);
+        if (clear) {
+            if (f.exists()) {
+                if (!f.delete()) {
+                    throw new Exception(String.format("Failed to delete existing file. [path=%s]", f.getAbsolutePath()));
+                }
+            }
+        }
+        LogUtils.debug(getClass(), String.format("Setup Map file. [path=%s]", f.getAbsolutePath()));
+        return f.getAbsolutePath();
     }
 
     private static final Config __instance = new Config();
