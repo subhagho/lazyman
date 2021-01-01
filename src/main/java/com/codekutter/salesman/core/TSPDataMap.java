@@ -6,7 +6,7 @@ import com.codekutter.salesman.core.model.Path;
 import com.codekutter.salesman.core.model.Point;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
-import jdk.internal.joptsimple.internal.Strings;
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -17,14 +17,13 @@ import net.openhft.chronicle.map.ChronicleMap;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @Getter
 @Setter
 @Accessors(fluent = true)
 public class TSPDataMap implements Closeable {
     private static final String AVG_KEY_SAMPLE = "XXXXX::YYYYY";
+    private static final int AVG_VALUE_SIZE = 256;
 
     @Setter(AccessLevel.NONE)
     private String filename;
@@ -43,6 +42,7 @@ public class TSPDataMap implements Closeable {
                 .of(CharSequence.class, Path.class)
                 .name(name)
                 .averageKey(AVG_KEY_SAMPLE)
+                .averageValueSize(AVG_VALUE_SIZE)
                 .entries(csize)
                 .createOrRecoverPersistedTo(new File(fname));
         LogUtils.debug(getClass(), String.format("Initialized Chronicle Map. [file=%s][size=%d]", fname, csize));
