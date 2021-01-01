@@ -8,11 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.moeaframework.problem.tsplib.DataType;
 
 import java.util.List;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class TSPDataReaderTest {
-    private static final String TSP_SOURCE_PATH = "src/test/resources/data/att48.tsp";
+    // private static final String TSP_SOURCE_PATH = "src/test/resources/data/att48.tsp";
+    private static final String TSP_SOURCE_PATH = "src/test/resources/data/rl1889.tsp";
     private static final String CONFIG_FILE = "src/test/resources/salesman-test.properties";
 
     @BeforeAll
@@ -33,14 +35,22 @@ class TSPDataReaderTest {
             reader.load();
 
             LogUtils.debug(TSPDataReader.class, String.format("Read TSP Data. [path=%s]", TSP_SOURCE_PATH));
+            int csize = reader.getNodeCount();
+            assertTrue(csize > 0);
+            Random rnd = new Random(System.currentTimeMillis());
 
-            List<Path> paths = reader.getSortedPaths(10);
-            assertNotNull(paths);
-            assertFalse(paths.isEmpty());
+            long ctime = System.currentTimeMillis();
+            for (int ii = 0; ii < 5; ii++) {
+                int index = rnd.nextInt(csize);
+                List<Path> paths = reader.getSortedPaths(index);
+                assertNotNull(paths);
+                assertFalse(paths.isEmpty());
 
-            for (Path p : paths) {
-                LogUtils.debug(getClass(), String.format("Distance = %f", p.distance()));
+                for (Path p : paths) {
+                    LogUtils.debug(getClass(), String.format("Distance = %f", p.distance()));
+                }
             }
+            LogUtils.info(getClass(), String.format("Time to fetch 5 path lists = %d msec", (System.currentTimeMillis() - ctime)));
         } catch (Throwable t) {
             LogUtils.error(TSPDataReader.class, t);
             fail(t);

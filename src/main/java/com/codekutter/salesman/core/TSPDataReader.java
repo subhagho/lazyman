@@ -99,6 +99,13 @@ public class TSPDataReader implements Closeable {
         return paths;
     }
 
+    public int getNodeCount() {
+        if (cache != null && cache.points() != null) {
+            return cache.points().length;
+        }
+        return -1;
+    }
+
     @Override
     public void close() throws IOException {
         if (cache != null) cache.close();

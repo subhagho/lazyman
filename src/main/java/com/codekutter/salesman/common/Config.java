@@ -18,6 +18,7 @@ public class Config {
     private String workingDir;
     private String mapsDataDir;
     private Properties config;
+    private RunInfo runInfo;
 
     private void load(@NonNull String filename) {
         try {
@@ -25,6 +26,8 @@ public class Config {
             config.load(new FileInputStream(filename));
 
             initWorkingDir();
+            runInfo = new RunInfo();
+            runInfo.init(workingDir);
         } catch (Throwable t) {
             throw new RuntimeException("Error loading configuration.", t);
         }
