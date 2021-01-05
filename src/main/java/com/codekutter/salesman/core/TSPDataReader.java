@@ -72,10 +72,9 @@ public class TSPDataReader implements Closeable {
             for (int ii = 0; ii < cache.points().length; ii++) {
                 for (int jj = 0; jj < cache.points().length; jj++) {
                     if (jj <= ii) continue;
-                    String key = cache.getKey(ii, jj);
                     Path path = new Path();
                     path.compute(cache.points()[ii], cache.points()[jj]);
-                    cache.cache().put(key, path);
+                    cache.put(cache.points()[ii].sequence(), cache.points()[jj].sequence(), path);
                     LogUtils.debug(getClass(), String.format("Added path [sequence=%d][index=%d][path=%s]", ii, jj, path));
                 }
             }
@@ -88,8 +87,7 @@ public class TSPDataReader implements Closeable {
         ArrayList<Path> paths = new ArrayList<>(cache.points().length - 1);
         for (int ii = 0; ii < cache.points().length; ii++) {
             if (ii == sequence) continue;
-            String key = cache.getKey(sequence, ii);
-            Path p = cache.cache().get(key);
+            Path p = cache.get(sequence, ii);
             if (p != null) {
                 paths.add(p);
             }

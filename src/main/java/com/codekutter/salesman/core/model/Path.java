@@ -42,6 +42,24 @@ public class Path implements BytesMarshallable, Comparable<Path> {
         B = b;
     }
 
+    public Point getTarget(@NonNull Point source) {
+        if (A.sequence() == source.sequence()) {
+            return B;
+        } else if (B.sequence() == source.sequence()) {
+            return A;
+        }
+        return null;
+    }
+
+    public Point getTarget(int source) {
+        if (A.sequence() == source) {
+            return B;
+        } else if (B.sequence() == source) {
+            return A;
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return "Path{" +

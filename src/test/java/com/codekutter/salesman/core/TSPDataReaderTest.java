@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TSPDataReaderTest {
     // private static final String TSP_SOURCE_PATH = "src/test/resources/data/att48.tsp";
-    private static final String TSP_SOURCE_PATH = "src/test/resources/data/rl1889.tsp";
+    private static final String TSP_SOURCE_PATH = "src/test/resources/data/rl5934.tsp";
     private static final String CONFIG_FILE = "src/test/resources/salesman-test.properties";
 
     @BeforeAll
@@ -47,7 +47,7 @@ class TSPDataReaderTest {
                 assertFalse(paths.isEmpty());
 
                 for (Path p : paths) {
-                    LogUtils.debug(getClass(), String.format("Distance = %f", p.distance()));
+                    LogUtils.debug(getClass(), String.format("[sequence=%d] Distance = %f", index, p.distance()));
                 }
             }
             LogUtils.info(getClass(), String.format("Time to fetch 5 path lists = %d msec", (System.currentTimeMillis() - ctime)));
