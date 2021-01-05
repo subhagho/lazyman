@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Accessors(fluent = true)
@@ -82,7 +83,7 @@ public class TSPDataReader implements Closeable {
     }
 
     public List<Path> getSortedPaths(int sequence) {
-        Preconditions.checkArgument(sequence >= 0 && sequence < cache.points().length);
+        Preconditions.checkArgument(sequence >= 0);
 
         ArrayList<Path> paths = new ArrayList<>(cache.points().length - 1);
         for (int ii = 0; ii < cache.points().length; ii++) {
@@ -95,6 +96,19 @@ public class TSPDataReader implements Closeable {
         if (!paths.isEmpty())
             paths.sort(new PathComparator());
         return paths;
+    }
+
+    public void updatePath(@NonNull Path path, Point point, double height) {
+        Preconditions.checkArgument(height >= 0);
+        path.elevate(height);
+
+        Map<Integer, Path> paths = cache.get(point.sequence());
+        if (paths != null) {
+            for (Integer key : paths.keySet()) {
+                Path p = paths.get(key);
+                if (p != null) p.elevate(height);
+            }
+        }
     }
 
     public int getNodeCount() {

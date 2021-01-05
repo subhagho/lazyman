@@ -24,7 +24,7 @@ public class PointIndexOut {
             return sequence == target.sequence;
         }
     }
-    
+
     private final Map<Integer, PointInfo[]> outPoints;
 
     public PointIndexOut(int size) {
@@ -49,7 +49,7 @@ public class PointIndexOut {
         return pis;
     }
 
-    public void put(int sequence, @NonNull Path path) throws IndexOutOfBoundsException {
+    public PointInfo put(int sequence, @NonNull Path path) throws IndexOutOfBoundsException {
         Preconditions.checkArgument(sequence > 0);
         if (!outPoints.containsKey(sequence)) {
             put(sequence);
@@ -72,23 +72,35 @@ public class PointIndexOut {
         pi.sequence(target);
         pi.distance(path.distance());
         pis[findex] = pi;
+
+        return pi;
     }
 
-    public boolean remove(int sequence, int target) throws IndexOutOfBoundsException {
+    public PointInfo remove(int sequence, int target) throws IndexOutOfBoundsException {
         Preconditions.checkArgument(sequence > 0);
         Preconditions.checkArgument(target > 0 && target != sequence);
-        PointInfo[] pis = outPoints.get(sequence);
+        PointInfo pi = removeNode(sequence, target);
+        if (pi != null) {
+            removeNode(target, sequence);
+        }
+        return pi;
+    }
+
+    private PointInfo removeNode(int p1, int p2) throws IndexOutOfBoundsException {
+        PointInfo[] pis = outPoints.get(p1);
         if (pis == null) {
-            throw new IndexOutOfBoundsException(String.format("Sequence not added. [sequence=%d]", sequence));
+            throw new IndexOutOfBoundsException(String.format("Sequence not added. [sequence=%d]", p1));
         }
-        if (pis[0].sequence() == target) {
+        if (pis[0] != null && pis[0].sequence() == p2) {
+            PointInfo pi = pis[0];
             pis[0] = null;
-            return true;
-        } else if (pis[1].sequence() == target) {
+            return pi;
+        } else if (pis[1] != null && pis[1].sequence() == p2) {
+            PointInfo pi = pis[1];
             pis[1] = null;
-            return true;
+            return pi;
         }
-        return false;
+        return null;
     }
 
     public void put(int sequence, int replace, @NonNull Path path) throws IndexOutOfBoundsException {

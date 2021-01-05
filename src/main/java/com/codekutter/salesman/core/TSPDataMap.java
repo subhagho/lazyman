@@ -55,6 +55,10 @@ public class TSPDataMap implements Closeable {
         return path;
     }
 
+    public Map<Integer, Path> get(int sequence) {
+        return cache.get(sequence);
+    }
+
     private void putTo(int index, int target, Path path) {
         Map<Integer, Path> map = cache.get(index);
         if (map == null) {

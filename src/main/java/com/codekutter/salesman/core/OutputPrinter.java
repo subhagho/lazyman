@@ -16,7 +16,7 @@ public class OutputPrinter {
     public static final String DIR_ITERATION_OUTPUT = "iterations";
 
     public static void print(@NonNull PointIndexOut out, int iteration) {
-        if (!LogUtils.isDebugEnabled()) return;
+       // if (!LogUtils.isDebugEnabled()) return;
         try {
             String dir = Config.get().runInfo().createOutputDir(DIR_ITERATION_OUTPUT);
             String file = String.format("iteration_%d.tsv", iteration);
@@ -63,10 +63,10 @@ public class OutputPrinter {
         buff.append(String.format("ITERATION=%d\n", iteration));
 
         for (int ii = 0; ii < size; ii++) {
-            if (ii != 0) buff.append(",");
+            if (ii != 0) buff.append("\t");
             buff.append(ii);
         }
-        buff.append(",").append(size);
+        buff.append("\t").append(size);
 
         fos.write(buff.toString().getBytes(StandardCharsets.UTF_8));
     }

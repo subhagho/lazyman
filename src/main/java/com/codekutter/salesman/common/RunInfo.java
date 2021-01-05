@@ -21,7 +21,7 @@ public class RunInfo {
 
     public void init(@NonNull String wd) {
         Date date = Calendar.getInstance().getTime();
-        DateFormat df = new SimpleDateFormat("yyyy/mm/dd/HH/MM/ss");
+        DateFormat df = new SimpleDateFormat("yyyy/MM/dd/HH/mm/ss");
         String datePath = df.format(date);
         String path = String.format("%s/%s", wd, datePath);
         File di = new File(path);
