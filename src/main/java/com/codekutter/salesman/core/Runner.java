@@ -161,6 +161,7 @@ public class Runner {
         reader.updatePath(path, target, h);
         removed = indexOut.remove(target.sequence(), points[index1].sequence());
         Preconditions.checkState(removed != null);
+        indexOut.put(target.sequence(), path);
         return indexOut.put(sequence, path);
     }
 

@@ -26,7 +26,7 @@
     <property name="LOGDIR" value="/tmp/codekutter/salesman/log"/>
     <property name="APP" value="salesman-test"/>
 
-    <contextName>wookler-test</contextName>
+    <contextName>salesman-test</contextName>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOGDIR}/${APP}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">

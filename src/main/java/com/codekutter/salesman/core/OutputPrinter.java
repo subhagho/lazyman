@@ -16,17 +16,17 @@ public class OutputPrinter {
     public static final String DIR_ITERATION_OUTPUT = "iterations";
 
     public static void print(@NonNull PointIndexOut out, int iteration) {
-       // if (!LogUtils.isDebugEnabled()) return;
+        if (!LogUtils.isDebugEnabled()) return;
         try {
             String dir = Config.get().runInfo().createOutputDir(DIR_ITERATION_OUTPUT);
             String file = String.format("iteration_%d.tsv", iteration);
             File fout = new File(String.format("%s/%s", dir, file));
             try (FileOutputStream fos = new FileOutputStream(fout)) {
-                printHeader(fos, iteration, out.size());
-
-                for (int ii = 0; ii < out.size(); ii++) {
-                    PointIndexOut.PointInfo[] points = out.getPoints(ii);
-                    StringBuffer buffer = new StringBuffer(ii);
+                printHeader(fos, iteration, out.size() + 1);
+                for (Integer key : out.outPoints().keySet()) {
+                    PointIndexOut.PointInfo[] points = out.getPoints(key);
+                    StringBuffer buffer = new StringBuffer();
+                    buffer.append(key);
                     for (int jj = 0; jj < out.size(); jj++) {
                         buffer.append("\t");
                         PointIndexOut.PointInfo pi = findPoint(jj, points);
@@ -49,7 +49,7 @@ public class OutputPrinter {
     private static PointIndexOut.PointInfo findPoint(int sequence, PointIndexOut.PointInfo[] points) {
         if (points != null) {
             for (PointIndexOut.PointInfo pi : points) {
-                if (pi.sequence() == sequence) return pi;
+                if (pi != null && pi.sequence() == sequence) return pi;
             }
         }
         return null;
@@ -58,15 +58,15 @@ public class OutputPrinter {
     private static void printHeader(FileOutputStream fos, int iteration, int size) throws IOException {
         StringBuffer buff = new StringBuffer();
         RunInfo ri = Config.get().runInfo();
-        buff.append(String.format("RUN ID=%s\n", ri.runId()));
-        buff.append(String.format("DATE=%s\n", new Date().toString()));
-        buff.append(String.format("ITERATION=%d\n", iteration));
+        buff.append(String.format("RUN ID\t%s\n", ri.runId()));
+        buff.append(String.format("DATE\t%s\n", new Date().toString()));
+        buff.append(String.format("ITERATION\t%d\n", iteration));
 
         for (int ii = 0; ii < size; ii++) {
             if (ii != 0) buff.append("\t");
             buff.append(ii);
         }
-        buff.append("\t").append(size);
+        buff.append("\n");
 
         fos.write(buff.toString().getBytes(StandardCharsets.UTF_8));
     }
@@ -110,12 +110,14 @@ public class OutputPrinter {
                     PointIndexOut.PointInfo pn = points[nextIndex];
                     if (pn.equalsTo(startp[1])) {
                         double d = dataMap.getLength(startp[1].sequence(), pn.sequence());
-                        if (d <= 0) throw new Exception(String.format("[%d->%d] Invalid distance.", startp[1].sequence(), pn.sequence()));
+                        if (d <= 0)
+                            throw new Exception(String.format("[%d->%d] Invalid distance.", startp[1].sequence(), pn.sequence()));
                         distance += d;
                         break;
                     }
                     double d = dataMap.getLength(pi.sequence(), prevp[prevIndex].sequence());
-                    if (d <= 0) throw new Exception(String.format("[%d->%d] Invalid distance.", startp[1].sequence(), pn.sequence()));
+                    if (d <= 0)
+                        throw new Exception(String.format("[%d->%d] Invalid distance.", startp[1].sequence(), pn.sequence()));
                     distance += d;
                     ps = dataMap.points()[pi.sequence()];
                     route.append(pi.sequence()).append("\t").append(String.format("[%f,%f]", ps.X(), ps.Y())).append("\t").append(d).append("\n");
