@@ -17,29 +17,29 @@ public class Path implements BytesMarshallable, Comparable<Path> {
     private Point A;
     @Setter(AccessLevel.NONE)
     private Point B;
-    private double length;
-    @Setter(AccessLevel.NONE)
-    private double elevation = 0;
-    @Setter(AccessLevel.NONE)
-    private double distance;
+    private final double length;
 
-    public void elevate(double elevation) {
-        Preconditions.checkArgument(elevation >= 0);
-        this.elevation = elevation;
-
-        distance = Math.sqrt(Math.pow(elevation, 2) + Math.pow(length, 2));
+    public Path(@NonNull Point A, @NonNull Point B, double length) {
+        this.A = A;
+        this.B = B;
+        this.length = length;
     }
 
-    public void compute(@NonNull Point a, @NonNull Point b) {
-        double dx = a.X() - b.X();
-        double dy = a.Y() - b.Y();
+    public Path(@NonNull Point A, @NonNull Point B) {
+        Preconditions.checkArgument(A.Y() != null && A.X() != null);
+        Preconditions.checkArgument(B.Y() != null && B.X() != null);
 
-        length = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-        distance = length;
-        elevation = 0;
+        length = Math.sqrt(Math.pow((A.X() - B.X()), 2) + Math.pow((A.Y() - B.Y()), 2));
+        this.A = A;
+        this.B = B;
+    }
 
-        A = a;
-        B = b;
+    public double distance() {
+        if (A != null && B != null) {
+            double h = A.elevation() - B.elevation();
+
+        }
+        return -1;
     }
 
     public Point getTarget(@NonNull Point source) {
@@ -61,18 +61,7 @@ public class Path implements BytesMarshallable, Comparable<Path> {
     }
 
     @Override
-    public String toString() {
-        return "Path{" +
-                "[A=" + A +
-                ", B=" + B +
-                "], length=" + length +
-                ", elevation=" + elevation +
-                ", distance=" + distance +
-                '}';
-    }
-
-    @Override
     public int compareTo(@NotNull Path o) {
-        return (int) (distance - o.distance());
+        return (int) (distance() - o.distance());
     }
 }
