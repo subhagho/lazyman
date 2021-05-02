@@ -160,12 +160,6 @@
             <artifactId>jackson-datatype-joda</artifactId>
             <version>2.10.1</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.xerial.larray/larray -->
-        <dependency>
-            <groupId>org.xerial.larray</groupId>
-            <artifactId>larray_2.12</artifactId>
-            <version>0.4.1</version>
-        </dependency>
 
     </dependencies>
     <build>
