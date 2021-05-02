@@ -2,7 +2,6 @@ package com.codekutter.salesman.core;
 
 import com.codekutter.salesman.common.LogUtils;
 import com.codekutter.salesman.core.model.Path;
-import com.codekutter.salesman.core.model.PathComparator;
 import com.codekutter.salesman.core.model.Point;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -16,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Getter
 @Accessors(fluent = true)
@@ -54,7 +52,7 @@ public class TSPDataReader implements Closeable {
             cache.close();
         }
         cache = new TSPDataMap();
-        cache.init(name, true, data.getDimension());
+        cache.init(name, data.getDimension());
 
         DistanceTable dt = data.getDistanceTable();
         if (dt instanceof NodeCoordinates) {
@@ -79,6 +77,7 @@ public class TSPDataReader implements Closeable {
                 }
             }
         }
+        cache.postLoad();
     }
 
     public List<Path> getSortedPaths(int sequence) {
@@ -94,7 +93,7 @@ public class TSPDataReader implements Closeable {
             }
         }
         if (!paths.isEmpty())
-            paths.sort(new PathComparator());
+            paths.sort(new Path.PathComparator());
         return paths;
     }
 

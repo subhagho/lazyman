@@ -1,6 +1,5 @@
 package com.codekutter.salesman.core;
 
-import com.codekutter.salesman.common.Config;
 import com.codekutter.salesman.core.model.Path;
 import com.codekutter.salesman.core.model.Point;
 import com.google.common.base.Preconditions;
@@ -13,6 +12,7 @@ import lombok.experimental.Accessors;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,29 +20,27 @@ import java.util.Map;
 @Setter
 @Accessors(fluent = true)
 public class TSPDataMap implements Closeable {
-    private static final String AVG_KEY_SAMPLE = "XXXXX::YYYYY";
-    private static final int AVG_VALUE_SIZE = 256;
-
+    @Setter(AccessLevel.NONE)
+    private int size;
     @Setter(AccessLevel.NONE)
     private String filename;
     @Setter(AccessLevel.NONE)
-    private Map<Integer, Map<Integer, Path>> cache;
+    private Map<Integer, Path[]> cache;
     @Setter(AccessLevel.NONE)
     private Point[] points;
 
-    public void init(@NonNull String name, boolean reset, int size) throws Exception {
+    public void init(@NonNull String name, int size) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(name));
         Preconditions.checkArgument(size > 0);
 
-        String fname = Config.get().setupMapFile(name, reset);
         cache = new HashMap<>(size);
         points = new Point[size];
+        this.size = size;
     }
 
-    public Path get(int ii, int jj) {
+    public Path get(int ii, int index) {
         if (cache.containsKey(ii)) {
-            Map<Integer, Path> map = cache.get(ii);
-            if (map != null) return map.get(jj);
+            return cache.get(ii)[index];
         }
         return null;
     }
@@ -55,44 +53,61 @@ public class TSPDataMap implements Closeable {
         return path;
     }
 
-    public Map<Integer, Path> get(int sequence) {
+    public void postLoad() {
+        Path.SortByLength sorter = new Path.SortByLength();
+        for (int ii = 0; ii < size; ii++) {
+            Path[] paths = cache.get(ii);
+            if (paths != null) {
+                Arrays.sort(paths, sorter);
+            }
+        }
+    }
+
+    public Path[] get(int sequence) {
         return cache.get(sequence);
     }
 
     private void putTo(int index, int target, Path path) {
-        Map<Integer, Path> map = cache.get(index);
-        if (map == null) {
-            map = new HashMap<>();
-            cache.put(index, map);
+        Path[] paths = cache.get(index);
+        if (paths == null) {
+            paths = new Path[size];
+            cache.put(index, paths);
         }
-        map.put(target, path);
+        paths[target] = path;
     }
 
     public double getDistance(int s1, int s2) {
         if (cache.containsKey(s1)) {
-            Map<Integer, Path> map = cache.get(s1);
-            Path p = map.get(s2);
-            if (p != null) return p.distance();
+            Path[] paths = cache.get(s1);
+            if (paths != null) {
+                Path p = find(paths, s2);
+                if (p != null) return p.distance();
+            }
         }
         return -1;
     }
 
     public double getLength(int s1, int s2) {
         if (cache.containsKey(s1)) {
-            Map<Integer, Path> map = cache.get(s1);
-            Path p = map.get(s2);
-            if (p != null) return p.length();
+            Path[] paths = cache.get(s1);
+            if (paths != null) {
+                Path p = find(paths, s2);
+                if (p != null) return p.length();
+            }
         }
         return -1;
+    }
+
+    private Path find(Path[] paths, int sequence) {
+        for (Path p : paths) {
+            if (p.A().sequence() == sequence || p.B().sequence() == sequence) return p;
+        }
+        return null;
     }
 
     @Override
     public void close() throws IOException {
         if (cache != null) {
-            for (Integer k : cache.keySet()) {
-                Map<Integer, Path> map = cache.get(k);
-                if (map != null) map.clear();
-            }
             cache.clear();
         }
         cache = null;
