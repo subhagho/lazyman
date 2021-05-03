@@ -3,10 +3,8 @@ package com.codekutter.salesman.core;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.codekutter.salesman.common.Config;
-import com.codekutter.salesman.common.Constants;
 import com.codekutter.salesman.common.LogUtils;
 import com.codekutter.salesman.core.model.Connections;
-import com.codekutter.salesman.core.model.Path;
 import com.codekutter.salesman.core.model.Point;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -14,9 +12,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.moeaframework.problem.tsplib.DataType;
-
-import java.io.IOException;
-import java.util.List;
 
 @Getter
 @Setter
@@ -71,13 +66,14 @@ public class Runner {
         for (int ii = 0; ii < reader.getNodeCount(); ii++) {
             Point p = reader.cache().points()[ii];
             Connections.Connection paths = connections.get(p);
-            if (!paths.isComplete()) {
-                iterator.run(iteration, ii);
+            if (paths == null || !paths.isComplete()) {
+                iterator.run(iteration, p, ii);
             }
         }
         LogUtils.info(getClass(),
                 String.format("[%d] Completed iteration. [time=%d]", iteration, (System.currentTimeMillis() - st)));
-        OutputPrinter.print(reader.cache(), connections, iteration);
+        if (iteration > 0 && iteration % 100 == 0)
+            OutputPrinter.print(reader.cache(), connections, iteration);
     }
 
 

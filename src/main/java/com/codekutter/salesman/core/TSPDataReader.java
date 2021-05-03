@@ -61,7 +61,7 @@ public class TSPDataReader implements Closeable {
                 Node node = coords.get(ii);
                 if (node != null) {
                     Point point = new Point();
-                    point.sequence(ii);
+                    point.sequence(ii - 1);
                     point.X(node.getPosition()[0]);
                     point.Y(node.getPosition()[1]);
 

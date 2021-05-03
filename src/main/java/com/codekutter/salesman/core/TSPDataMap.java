@@ -46,8 +46,8 @@ public class TSPDataMap implements Closeable {
     }
 
     public Path put(int ii, int jj, @NonNull Path path) {
-        Preconditions.checkArgument(ii > 0);
-        Preconditions.checkArgument(jj > 0);
+        Preconditions.checkArgument(ii >= 0);
+        Preconditions.checkArgument(jj >= 0);
         putTo(ii, jj, path);
         putTo(jj, ii, path);
         return path;

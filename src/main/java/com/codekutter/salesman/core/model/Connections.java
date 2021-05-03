@@ -98,6 +98,15 @@ public class Connections {
     }
 
     public Connection get(@NonNull Point point) {
+        return get(point, false);
+    }
+
+    public Connection get(@NonNull Point point, boolean create) {
+        if (create) {
+            if (!connections.containsKey(point)) {
+                connections.put(point, new Connection(point));
+            }
+        }
         return connections.get(point);
     }
 

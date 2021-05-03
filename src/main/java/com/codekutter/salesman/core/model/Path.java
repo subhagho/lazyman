@@ -71,7 +71,7 @@ public class Path implements BytesMarshallable, Comparable<Path> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Path path = (Path) o;
-        return A.equals(path.A) && B.equals(path.B);
+        return (A.equals(path.A) && B.equals(path.B)) || (A.equals(path.B) && B.equals(path.A));
     }
 
     @Override
@@ -123,6 +123,10 @@ public class Path implements BytesMarshallable, Comparable<Path> {
          */
         @Override
         public int compare(Path o1, Path o2) {
+            if (o1 == null && o2 == null) return 0;
+            else if (o1 != null && o2 == null) return -1;
+            else if (o1 == null) return 1;
+
             double ret = o1.length - o2.length;
             int v = 0;
             if (ret < 0) {
