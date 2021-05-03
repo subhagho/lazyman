@@ -38,7 +38,7 @@ public class Path implements BytesMarshallable, Comparable<Path> {
     public double distance() {
         if (A != null && B != null) {
             double h = A.elevation() - B.elevation();
-
+            return Math.sqrt(Math.pow(length, 2) + Math.pow(h, 2));
         }
         return -1;
     }

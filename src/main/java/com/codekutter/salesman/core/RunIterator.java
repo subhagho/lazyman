@@ -56,7 +56,7 @@ public class RunIterator {
                 Path tp = findPathToReplace(tc, dist);
                 if (tp == null) continue;
                 double h = Math.sqrt(Math.pow(dist, 2) - Math.pow(path.length(), 2));
-                connections.remove(target, path);
+                connections.remove(target, tp);
                 target.elevation(h);
                 return path;
             }

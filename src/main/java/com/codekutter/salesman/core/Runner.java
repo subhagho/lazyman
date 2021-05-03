@@ -54,6 +54,7 @@ public class Runner {
                 iteration++;
             }
             LogUtils.info(getClass(), String.format("Reached equilibrium : [#iterations=%d][time=%d]", iteration, (System.currentTimeMillis() - st)));
+            OutputPrinter.print(reader.cache(), connections, iteration);
         } catch (Exception ex) {
             LogUtils.error(getClass(), ex);
             throw new RuntimeException(ex);
@@ -72,8 +73,9 @@ public class Runner {
         }
         LogUtils.info(getClass(),
                 String.format("[%d] Completed iteration. [time=%d]", iteration, (System.currentTimeMillis() - st)));
-        if (iteration > 0 && iteration % 100 == 0)
+        if (iteration > 0 && iteration % 100000 == 0) {
             OutputPrinter.print(reader.cache(), connections, iteration);
+        }
     }
 
 

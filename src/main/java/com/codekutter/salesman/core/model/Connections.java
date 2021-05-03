@@ -91,7 +91,7 @@ public class Connections {
     }
 
     private final int size;
-    private Map<Point, Connection> connections = new HashMap<>();
+    private Map<String, Connection> connections = new HashMap<>();
 
     public Connections(int size) {
         this.size = size;
@@ -103,11 +103,11 @@ public class Connections {
 
     public Connection get(@NonNull Point point, boolean create) {
         if (create) {
-            if (!connections.containsKey(point)) {
-                connections.put(point, new Connection(point));
+            if (!connections.containsKey(point.hashKey())) {
+                connections.put(point.hashKey(), new Connection(point));
             }
         }
-        return connections.get(point);
+        return connections.get(point.hashKey());
     }
 
     public Connections replace(@NonNull Path newp, @NonNull Path oldp) {
@@ -124,10 +124,10 @@ public class Connections {
     }
 
     private void add(Point p, Path path) throws ArrayIndexOutOfBoundsException {
-        Connection pa = connections.get(p);
+        Connection pa = connections.get(p.hashKey());
         if (pa == null) {
             pa = new Connection(p);
-            connections.put(p, pa);
+            connections.put(p.hashKey(), pa);
         }
         pa.add(path);
     }
@@ -139,16 +139,22 @@ public class Connections {
     }
 
     public void remove(Point p, Path path) throws IllegalArgumentException {
-        Connection pa = connections.get(p);
+        Connection pa = connections.get(p.hashKey());
         if (pa == null) {
             throw new IllegalArgumentException(String.format("Point doesn't have any connections. [point=%s]", p.toString()));
         }
         pa.remove(path);
+        Point tp = path.getTarget(p);
+        Connection tc = connections.get(tp.hashKey());
+        if (tc == null) {
+            throw new IllegalArgumentException(String.format("Point doesn't have any connections. [point=%s]", tp.toString()));
+        }
+        tc.remove(path);
     }
 
     public boolean reachedClosure() {
-        for (Point p : connections.keySet()) {
-            Connection c = connections.get(p);
+        for (String key : connections.keySet()) {
+            Connection c = connections.get(key);
             if (!c.isComplete()) return false;
         }
         return true;
