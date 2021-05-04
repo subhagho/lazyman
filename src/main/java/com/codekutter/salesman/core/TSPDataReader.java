@@ -57,27 +57,53 @@ public class TSPDataReader implements Closeable {
         DistanceTable dt = data.getDistanceTable();
         if (dt instanceof NodeCoordinates) {
             NodeCoordinates coords = (NodeCoordinates) dt;
-            for (int ii = 1; ii <= coords.size(); ii++) {
-                Node node = coords.get(ii);
-                if (node != null) {
-                    Point point = new Point();
-                    point.sequence(ii - 1);
-                    point.X(node.getPosition()[0]);
-                    point.Y(node.getPosition()[1]);
+            readNodeCoordinates(coords);
+        } else if (dt instanceof EdgeWeightMatrix) {
+            readEdgeWeightMatrix((EdgeWeightMatrix) dt);
+        }
+        cache.postLoad();
+    }
 
-                    cache.points()[ii - 1] = point;
-                }
+    private void readEdgeWeightMatrix(EdgeWeightMatrix matrix) {
+        int[] nodes = matrix.listNodes();
+        if (nodes != null && nodes.length > 0) {
+            for (int ii = 1; ii <= nodes.length; ii++) {
+                Point p = new Point();
+                p.sequence(ii - 1);
+                cache.points()[ii - 1] = p;
             }
             for (int ii = 0; ii < cache.points().length; ii++) {
                 for (int jj = 0; jj < cache.points().length; jj++) {
-                    if (jj <= ii) continue;
-                    Path path = new Path(cache.points()[ii], cache.points()[jj]);
+                    if (ii == jj) continue;
+                    double length = matrix.getDistanceBetween(ii + 1, jj + 1);
+                    Path path = new Path(cache.points()[ii], cache.points()[jj], length);
                     cache.put(cache.points()[ii].sequence(), cache.points()[jj].sequence(), path);
                     LogUtils.debug(getClass(), String.format("Added path [sequence=%d][index=%d][path=%s]", ii, jj, path));
                 }
             }
         }
-        cache.postLoad();
+    }
+
+    private void readNodeCoordinates(NodeCoordinates coords) {
+        for (int ii = 1; ii <= coords.size(); ii++) {
+            Node node = coords.get(ii);
+            if (node != null) {
+                Point point = new Point();
+                point.sequence(ii - 1);
+                point.X(node.getPosition()[0]);
+                point.Y(node.getPosition()[1]);
+
+                cache.points()[ii - 1] = point;
+            }
+        }
+        for (int ii = 0; ii < cache.points().length; ii++) {
+            for (int jj = 0; jj < cache.points().length; jj++) {
+                if (jj <= ii) continue;
+                Path path = new Path(cache.points()[ii], cache.points()[jj]);
+                cache.put(cache.points()[ii].sequence(), cache.points()[jj].sequence(), path);
+                LogUtils.debug(getClass(), String.format("Added path [sequence=%d][index=%d][path=%s]", ii, jj, path));
+            }
+        }
     }
 
     public List<Path> getSortedPaths(int sequence) {
