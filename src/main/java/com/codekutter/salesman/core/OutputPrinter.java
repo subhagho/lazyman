@@ -24,20 +24,24 @@ public class OutputPrinter {
             String file = String.format("iteration_%d.tsv", iteration);
             File fout = new File(String.format("%s/%s", dir, file));
             double totalDistance = 0;
+            int unbalanced = 0;
             try (FileOutputStream fos = new FileOutputStream(fout)) {
                 printHeader(fos, iteration, cache);
                 for (int ii = 0; ii < cache.size(); ii++) {
                     Point p = cache.points()[ii];
                     Connections.Connection connection = out.get(p);
-
                     StringBuffer buffer = new StringBuffer();
-                    buffer.append(p.print());
+                    if (!connection.isComplete()) {
+                        unbalanced++;
+                        buffer.append("**");
+                    }
+                    buffer.append(p.print()).append("\t").append(p.ring());
                     for (int jj = 0; jj < cache.size(); jj++) {
                         buffer.append("\t");
                         if (ii != jj) {
                             Path path = connection.hasSequence(jj);
                             if (path != null) {
-                                buffer.append(path.distance());
+                                buffer.append(path.length());
                                 totalDistance += path.length();
                             }
                         }
@@ -46,6 +50,7 @@ public class OutputPrinter {
                     fos.write(buffer.toString().getBytes(StandardCharsets.UTF_8));
                 }
                 fos.write(String.format("Total Distance:\t%f\n", totalDistance / 2).getBytes(StandardCharsets.UTF_8));
+                fos.write(String.format("Unbalanced Count:\t%d\n", unbalanced).getBytes(StandardCharsets.UTF_8));
             }
             LogUtils.info(OutputPrinter.class,
                     String.format("Written output file [iteration=%d][path=%s]", iteration, fout.getAbsolutePath()));
@@ -62,7 +67,7 @@ public class OutputPrinter {
         buff.append(String.format("DATE\t%s\n", new Date().toString()));
         buff.append(String.format("ITERATION\t%d\n\n", iteration));
 
-        StringBuffer th = new StringBuffer("[points]");
+        StringBuffer th = new StringBuffer("[points]\t[ring]");
         Point[] points = cache.points();
         for (int ii = 0; ii < cache.size(); ii++) {
             th.append("\t").append(points[ii].print());

@@ -21,7 +21,6 @@ public class Connections {
     public static class Connection {
         private final Point point;
         private Path[] connections = new Path[2];
-        private short ring = -1;
 
         public Connection(@NonNull Point point) {
             this.point = point;

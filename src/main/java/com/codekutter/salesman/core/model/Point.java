@@ -19,6 +19,7 @@ public class Point implements BytesMarshallable {
     private Double Y = null;
     private double elevation = 0;
     private String key;
+    private short ring = -1;
 
     @Override
     public boolean equals(Object o) {

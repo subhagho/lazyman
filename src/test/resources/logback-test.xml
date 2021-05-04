@@ -23,7 +23,7 @@
   -->
 
 <configuration>
-    <property name="LOGDIR" value="/tmp/codekutter/salesman/log"/>
+    <property name="LOGDIR" value="C:/Work/temp/logs/salesman/"/>
     <property name="APP" value="salesman-test"/>
 
     <contextName>salesman-test</contextName>

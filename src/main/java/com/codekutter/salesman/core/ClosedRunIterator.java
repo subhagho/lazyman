@@ -5,33 +5,37 @@ import com.codekutter.salesman.core.model.Path;
 import com.codekutter.salesman.core.model.Point;
 import lombok.NonNull;
 
-public class RunIterator {
+public class ClosedRunIterator {
     private final TSPDataMap data;
     private final Connections connections;
 
-    public RunIterator(@NonNull TSPDataMap data, @NonNull Connections connections) {
+    public ClosedRunIterator(@NonNull TSPDataMap data, @NonNull Connections connections) {
         this.data = data;
         this.connections = connections;
     }
 
     public void run(int iteration, @NonNull Point point, int index) {
         Connections.Connection connection = connections.get(point, true);
-        if (connection.isComplete()) {
-            return;
-        }
-
         Path[] paths = data.get(index);
         if (paths == null) {
             throw new IllegalArgumentException(String.format("No path data found for sequence. [sequence=%d]", index));
         }
+        if (connection.isComplete()) {
+            return;
+        }
+
         for (int ii = 0; ii < connection.connections().length; ii++) {
             if (connection.connections()[ii] != null) continue;
             Path path = reserve(point, connection, paths);
             if (path != null) {
                 connections.add(path);
+            } else {
+                throw new RuntimeException(String.format("Unable to reserve path. [point=%s]", point.toString()));
             }
+
         }
     }
+
 
     private Path reserve(Point point, Connections.Connection connection, Path[] paths) {
         for (int ii = 0; ii < paths.length; ii++) {
@@ -56,9 +60,12 @@ public class RunIterator {
                 Path tp = findPathToReplace(tc, dist);
                 if (tp == null) continue;
                 double h = Math.sqrt(Math.pow(dist, 2) - Math.pow(path.length(), 2));
-                connections.remove(target, tp);
-                target.elevation(h);
-                return path;
+                Point bp = path.getTarget(point);
+                if (bp.elevation() < h) {
+                    connections.remove(target, tp);
+                    target.elevation(h);
+                    return path;
+                }
             }
         }
         return null;

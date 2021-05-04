@@ -1,0 +1,26 @@
+NAME : rect5
+COMMENT : Test TSP data of rectangle with center
+TYPE : TSP
+DIMENSION : 20
+EDGE_WEIGHT_TYPE : ATT
+NODE_COORD_SECTION
+1 0 0
+2 0 2
+3 0 4
+4 0 6
+5 0 8
+6 2 0
+7 2 2
+8 2 4
+9 2 6
+10 2 8
+11 4 0
+12 4 2
+13 4 4
+14 4 6
+15 4 8
+16 6 0
+17 6 2
+18 6 4
+19 6 6
+20 6 8

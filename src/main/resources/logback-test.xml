@@ -23,7 +23,7 @@
   -->
 
 <configuration>
-    <property name="LOGDIR" value="/tmp/codekutter/salesman/log"/>
+    <property name="LOGDIR" value="C:/Work/temp/logs/salesman/"/>
     <property name="APP" value="salesman-test"/>
 
     <contextName>salesman-test</contextName>
@@ -36,7 +36,7 @@
         </rollingPolicy>
 
         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <maxFileSize>5MB</maxFileSize>
+            <maxFileSize>128MB</maxFileSize>
         </triggeringPolicy>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{35} : %msg%n</pattern>
