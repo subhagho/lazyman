@@ -24,11 +24,27 @@ public class TSPDataReader implements Closeable {
     private final DataType dataType;
     private TSPInstance data;
     private TSPDataMap cache;
+    private List<Tour> tours;
 
     public TSPDataReader(@NonNull String filename, @NonNull DataType dataType) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(filename));
         this.filename = filename;
         this.dataType = dataType;
+    }
+
+    public List<Tour> readTours(@NonNull String filename) throws IOException {
+        File fi = new File(filename);
+        if (!fi.exists()) {
+            throw new IOException(String.format("File not found. [path=%s]", fi.getAbsolutePath()));
+        }
+        TSPInstance td = new TSPInstance(fi);
+        tours = td.getTours();
+        if (tours == null || tours.isEmpty()) {
+            throw new IOException(String.format("No tours loaded from file. [file=%s]", fi.getAbsolutePath()));
+        }
+        LogUtils.info(getClass(), String.format("Loaded tour file. [file=%s][#tours=%d]",
+                fi.getAbsolutePath(), tours.size()));
+        return tours;
     }
 
     public TSPInstance read() throws IOException {
@@ -70,6 +86,13 @@ public class TSPDataReader implements Closeable {
             for (int ii = 1; ii <= nodes.length; ii++) {
                 Point p = new Point();
                 p.sequence(ii - 1);
+                if (data.getDisplayData() != null) {
+                    Node node = data.getDisplayData().get(ii);
+                    if (node != null) {
+                        p.X(node.getPosition()[0]);
+                        p.Y(node.getPosition()[1]);
+                    }
+                }
                 cache.points()[ii - 1] = p;
             }
             for (int ii = 0; ii < cache.points().length; ii++) {
@@ -126,6 +149,20 @@ public class TSPDataReader implements Closeable {
     public int getNodeCount() {
         if (cache != null && cache.points() != null) {
             return cache.points().length;
+        }
+        return -1;
+    }
+
+    public double getOptDistance() {
+        if (tours != null && !tours.isEmpty()) {
+            double distance = Double.MAX_VALUE;
+            for (Tour tour : tours) {
+                double d = tour.distance(data);
+                if (d < distance) {
+                    distance = d;
+                }
+            }
+            return distance;
         }
         return -1;
     }

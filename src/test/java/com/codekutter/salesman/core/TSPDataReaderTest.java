@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TSPDataReaderTest {
     // private static final String TSP_SOURCE_PATH = "src/test/resources/data/att48.tsp";
     private static final String TSP_SOURCE_PATH = "src/test/resources/data/gr120.tsp";
+    private static final String TSP_TOUR_PATH = "src/test/resources/data/gr120.opt.tour";
     private static final String CONFIG_FILE = "src/test/resources/salesman-test.properties";
 
     @BeforeAll
@@ -34,7 +35,10 @@ class TSPDataReaderTest {
             reader.read();
             reader.load();
 
+            reader.readTours(TSP_TOUR_PATH);
+
             LogUtils.debug(TSPDataReader.class, String.format("Read TSP Data. [path=%s]", TSP_SOURCE_PATH));
+            LogUtils.debug(TSPDataReader.class, String.format("Read TSP Tour. [path=%s]", TSP_TOUR_PATH));
             int csize = reader.getNodeCount();
             assertTrue(csize > 0);
             Random rnd = new Random(System.currentTimeMillis());
@@ -50,7 +54,8 @@ class TSPDataReaderTest {
                     LogUtils.debug(getClass(), String.format("[sequence=%d] Distance = %f", index, p.distance()));
                 }
             }
-            LogUtils.info(getClass(), String.format("Time to fetch 5 path lists = %d msec", (System.currentTimeMillis() - ctime)));
+            LogUtils.info(getClass(), String.format("Time to fetch 5 path lists = %dmsec", (System.currentTimeMillis() - ctime)));
+            LogUtils.info(getClass(), String.format("Optimal Distance = %f", reader.getOptDistance()));
         } catch (Throwable t) {
             LogUtils.error(TSPDataReader.class, t);
             fail(t);

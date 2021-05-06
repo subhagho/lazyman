@@ -26,22 +26,60 @@ public class ClosedRunIterator {
 
         for (int ii = 0; ii < connection.connections().length; ii++) {
             if (connection.connections()[ii] != null) continue;
-            Path path = reserve(point, connection, paths);
+            Path path = reserve(point, connection, paths, paths.length);
             if (path != null) {
                 connections.add(path);
             } else {
                 throw new RuntimeException(String.format("Unable to reserve path. [point=%s]", point.toString()));
             }
-
         }
     }
 
+    public void checkOptimal(@NonNull Point point, int index) {
+        Connections.Connection connection = connections.get(point, true);
+        if (!connection.isComplete()) return;
 
-    private Path reserve(Point point, Connections.Connection connection, Path[] paths) {
+        Path[] paths = data.get(index);
+        if (paths == null) {
+            throw new IllegalArgumentException(String.format("No path data found for sequence. [sequence=%d]", index));
+        }
+        if (!connection.isComplete()) {
+            throw new IllegalArgumentException(String.format("Connection is expected to be complete. [point=%s]", point.toString()));
+        }
+        int idx = (connection.connections()[0].distance() < connection.connections()[1].distance() ? 0 : 1);
+        int stopIdx = findPathIndex(paths, connection.connections()[idx]);
+        if (stopIdx < 0) throw new RuntimeException("Path Index not found...");
+        Path path = reserve(point, connection, paths, stopIdx);
+        if (path != null) {
+            connections.remove(point, connection.connections()[idx]);
+            connections.add(path);
+        }
+        idx = 1 - idx;
+        stopIdx = findPathIndex(paths, connection.connections()[idx]);
+        if (stopIdx < 0) throw new RuntimeException("Path Index not found...");
+        path = reserve(point, connection, paths, stopIdx);
+        if (path != null) {
+            connections.remove(point, connection.connections()[idx]);
+            connections.add(path);
+        }
+    }
+
+    private int findPathIndex(Path[] paths, Path path) {
         for (int ii = 0; ii < paths.length; ii++) {
+            if (paths[ii] == null) continue;
+            if (paths[ii].equals(path)) {
+                return ii;
+            }
+        }
+        return -1;
+    }
+
+    private Path reserve(Point point, Connections.Connection connection, Path[] paths, int stopIndex) {
+        double mindist = paths[0].distance();
+        for (int ii = 0; ii < stopIndex; ii++) {
             Path path = paths[ii];
             if (path == null) continue;
-
+            double exp = 1 + Math.pow(ii / (1.0f * paths.length), 2);
             if (!canUse(path, point, connection)) continue;
             Point target = getTarget(point, path);
             Connections.Connection tc = connections.get(target, true);
@@ -55,11 +93,10 @@ public class ClosedRunIterator {
                 if (pn == null) {
                     continue;
                 }
-
                 double dist = pn.distance();
                 Path tp = findPathToReplace(tc, dist);
                 if (tp == null) continue;
-                double h = Math.sqrt(Math.pow(dist, 2) - Math.pow(path.length(), 2));
+                double h = Math.pow(Math.log(pn.distance() - mindist), exp);
                 Point bp = path.getTarget(point);
                 if (bp.elevation() < h) {
                     connections.remove(target, tp);

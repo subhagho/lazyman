@@ -26,6 +26,8 @@ public class Runner {
     private String tspData;
     @Parameter(names = {"--type", "-t"}, description = "TSP File type.", required = true)
     private String tspDataType;
+    @Parameter(names = {"--result", "-r"}, description = "Result tour file path.", required = false)
+    private String tourfile;
     @Setter(AccessLevel.NONE)
     private TSPDataReader reader;
     @Setter(AccessLevel.NONE)
@@ -47,6 +49,9 @@ public class Runner {
             reader.read();
             reader.load();
 
+            if (!Strings.isNullOrEmpty(tourfile)) {
+                reader.readTours(tourfile);
+            }
             connections = new Connections(reader.getNodeCount());
             iterator = new ClosedRunIterator(reader.cache(), connections);
 
@@ -55,7 +60,15 @@ public class Runner {
             long st = System.currentTimeMillis();
             while (true) {
                 lastPrintCount = run(reader, iteration, lastPrintCount, st);
-                if (connections.reachedClosure()) break;
+                if (connections.reachedClosure())  {
+                    for (int ii = 0; ii < reader.getNodeCount(); ii++) {
+                        Point p = reader.cache().points()[ii];
+                        iterator.checkOptimal(p, ii);
+                    }
+                    if (connections.reachedClosure()) {
+                        break;
+                    }
+                }
                 iteration++;
             }
             if (hasLocalEquilibrium()) {
