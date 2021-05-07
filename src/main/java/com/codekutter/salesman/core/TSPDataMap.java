@@ -28,6 +28,8 @@ public class TSPDataMap implements Closeable {
     private Map<Integer, Path[]> cache;
     @Setter(AccessLevel.NONE)
     private Point[] points;
+    @Setter(AccessLevel.NONE)
+    private Map<String, double[]> minDistances = new HashMap<>();
 
     public void init(@NonNull String name, int size) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(name));
@@ -59,6 +61,13 @@ public class TSPDataMap implements Closeable {
             Path[] paths = cache.get(ii);
             if (paths != null) {
                 Arrays.sort(paths, sorter);
+                Point p = points()[ii];
+                double mind = paths[0].actualLength();
+                for (Path pp : paths) {
+                    if (pp == null) continue;
+                    pp.length(pp.actualLength() - mind);
+                }
+                minDistances.put(p.hashKey(), new double[]{paths[0].distance(), paths[1].distance()});
             }
         }
     }
@@ -74,6 +83,10 @@ public class TSPDataMap implements Closeable {
             cache.put(index, paths);
         }
         paths[target] = path;
+    }
+
+    public double[] getMinDistances(@NonNull Point point) {
+        return minDistances.get(point.hashKey());
     }
 
     public double getDistance(int s1, int s2) {

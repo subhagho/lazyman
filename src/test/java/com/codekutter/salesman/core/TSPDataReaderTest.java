@@ -14,8 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TSPDataReaderTest {
     // private static final String TSP_SOURCE_PATH = "src/test/resources/data/att48.tsp";
-    private static final String TSP_SOURCE_PATH = "src/test/resources/data/gr120.tsp";
-    private static final String TSP_TOUR_PATH = "src/test/resources/data/gr120.opt.tour";
+    private static final String TSP_SOURCE_PATH = "src/test/resources/data/berlin52.tsp";
+    private static final String TSP_TOUR_PATH = "src/test/resources/data/berlin52.opt.tour";
     private static final String CONFIG_FILE = "src/test/resources/salesman-test.properties";
 
     @BeforeAll

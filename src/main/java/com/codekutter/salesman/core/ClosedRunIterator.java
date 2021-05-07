@@ -1,9 +1,12 @@
 package com.codekutter.salesman.core;
 
+import com.codekutter.salesman.common.LogUtils;
 import com.codekutter.salesman.core.model.Connections;
 import com.codekutter.salesman.core.model.Path;
 import com.codekutter.salesman.core.model.Point;
 import lombok.NonNull;
+
+import java.util.Arrays;
 
 public class ClosedRunIterator {
     private final TSPDataMap data;
@@ -16,22 +19,27 @@ public class ClosedRunIterator {
 
     public void run(int iteration, @NonNull Point point, int index) {
         Connections.Connection connection = connections.get(point, true);
-        Path[] paths = data.get(index);
-        if (paths == null) {
-            throw new IllegalArgumentException(String.format("No path data found for sequence. [sequence=%d]", index));
-        }
         if (connection.isComplete()) {
             return;
         }
 
-        for (int ii = 0; ii < connection.connections().length; ii++) {
-            if (connection.connections()[ii] != null) continue;
-            Path path = reserve(point, connection, paths, paths.length);
-            if (path != null) {
-                connections.add(path);
-            } else {
-                throw new RuntimeException(String.format("Unable to reserve path. [point=%s]", point.toString()));
+        Path[] paths = data.get(index);
+        if (paths == null) {
+            throw new IllegalArgumentException(String.format("No path data found for sequence. [sequence=%d]", index));
+        }
+        try {
+            Arrays.sort(paths, new Path.SortByDistance());
+            for (int ii = 0; ii < connection.connections().length; ii++) {
+                if (connection.connections()[ii] != null) continue;
+                Path path = reserve(point, connection, ii, paths, paths.length);
+                if (path != null) {
+                    connections.add(path);
+                } else {
+                    throw new RuntimeException(String.format("Unable to reserve path. [point=%s]", point.toString()));
+                }
             }
+        } catch (Throwable t) {
+            LogUtils.error(getClass(), t);
         }
     }
 
@@ -43,13 +51,11 @@ public class ClosedRunIterator {
         if (paths == null) {
             throw new IllegalArgumentException(String.format("No path data found for sequence. [sequence=%d]", index));
         }
-        if (!connection.isComplete()) {
-            throw new IllegalArgumentException(String.format("Connection is expected to be complete. [point=%s]", point.toString()));
-        }
+        Arrays.sort(paths, new Path.SortByDistance());
         int idx = (connection.connections()[0].distance() < connection.connections()[1].distance() ? 0 : 1);
         int stopIdx = findPathIndex(paths, connection.connections()[idx]);
         if (stopIdx < 0) throw new RuntimeException("Path Index not found...");
-        Path path = reserve(point, connection, paths, stopIdx);
+        Path path = reserve(point, connection, idx, paths, stopIdx);
         if (path != null) {
             connections.remove(point, connection.connections()[idx]);
             connections.add(path);
@@ -57,10 +63,20 @@ public class ClosedRunIterator {
         idx = 1 - idx;
         stopIdx = findPathIndex(paths, connection.connections()[idx]);
         if (stopIdx < 0) throw new RuntimeException("Path Index not found...");
-        path = reserve(point, connection, paths, stopIdx);
+        path = reserve(point, connection, idx, paths, stopIdx);
         if (path != null) {
             connections.remove(point, connection.connections()[idx]);
             connections.add(path);
+        }
+    }
+
+    private double getMinDistance(Point point, Connections.Connection connection) {
+        double[] dists = data.getMinDistances(point);
+        if (connection.connections() == null
+                || (connection.connections()[0] == null && connection.connections()[1] == null)) {
+            return dists[0];
+        } else {
+            return (dists[0] + dists[1]);
         }
     }
 
@@ -74,14 +90,26 @@ public class ClosedRunIterator {
         return -1;
     }
 
-    private Path reserve(Point point, Connections.Connection connection, Path[] paths, int stopIndex) {
-        double mindist = paths[0].distance();
+    private Path reserve(Point point, Connections.Connection connection, int index, Path[] paths, int stopIndex) {
+        double mindist = getMinDistance(point, connection);
+        double useddist = 0;
+        if (connection.connections() != null) {
+            if (index == 0 && connection.connections()[1] != null) {
+                useddist = connection.connections()[1].distance();
+            } else if (connection.connections()[0] != null) {
+                useddist = connection.connections()[0].distance();
+            }
+        }
         for (int ii = 0; ii < stopIndex; ii++) {
             Path path = paths[ii];
             if (path == null) continue;
-            double exp = 1 + Math.pow(ii / (1.0f * paths.length), 2);
+            Path pn = findNextValid(paths, ii);
+            if (pn == null) {
+                continue;
+            }
+            double dist = pn.distance();
             if (!canUse(path, point, connection)) continue;
-            Point target = getTarget(point, path);
+            Point target = path.getTarget(point);
             Connections.Connection tc = connections.get(target, true);
             int idx = -1;
             if (tc.connections()[0] == null) idx = 0;
@@ -89,20 +117,15 @@ public class ClosedRunIterator {
             if (idx >= 0) {
                 return path;
             } else {
-                Path pn = findNextValid(paths, ii);
-                if (pn == null) {
-                    continue;
-                }
-                double dist = pn.distance();
+                //double exp = Math.pow(1 + ii / (1f * paths.length), .5);
                 Path tp = findPathToReplace(tc, dist);
                 if (tp == null) continue;
-                double h = Math.pow(Math.log(pn.distance() - mindist), exp);
-                Point bp = path.getTarget(point);
-                if (bp.elevation() < h) {
-                    connections.remove(target, tp);
-                    target.elevation(h);
-                    return path;
-                }
+                double h = Math.pow((pn.distance() + useddist - mindist), .5);
+                //if (target.elevation() < h) {
+                connections.remove(target, tp);
+                target.elevation(h + point.elevation());
+                return path;
+                //}
             }
         }
         return null;

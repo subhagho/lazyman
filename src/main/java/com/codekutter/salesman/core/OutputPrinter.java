@@ -41,8 +41,8 @@ public class OutputPrinter {
                         if (ii != jj) {
                             Path path = connection.hasSequence(jj);
                             if (path != null) {
-                                buffer.append(path.length());
-                                totalDistance += path.length();
+                                buffer.append(path.actualLength());
+                                totalDistance += path.actualLength();
                             }
                         }
                     }
