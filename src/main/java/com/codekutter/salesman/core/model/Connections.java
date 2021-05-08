@@ -7,8 +7,10 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -87,6 +89,21 @@ public class Connections {
             }
             return null;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Connection that = (Connection) o;
+            return point.equals(that.point) && Arrays.equals(connections, that.connections);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Objects.hash(point);
+            result = 31 * result + Arrays.hashCode(connections);
+            return result;
+        }
     }
 
     private final int size;
@@ -157,5 +174,31 @@ public class Connections {
             if (!c.isComplete()) return false;
         }
         return true;
+    }
+
+    public boolean isIdentical(@NonNull Connections copy) {
+        for (String key : connections.keySet()) {
+            Connection c1 = connections.get(key);
+            if (!copy.connections.containsKey(key)) {
+                return false;
+            }
+            Connection c2 = copy.connections.get(key);
+            if (c1 != null) {
+                if (!c1.equals(c2)) {
+                    return false;
+                }
+            } else if (c2 != null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public Connections copy() {
+        Connections connections = new Connections(size);
+        for (String key : this.connections.keySet()) {
+            connections.connections.put(key, this.connections.get(key));
+        }
+        return connections;
     }
 }

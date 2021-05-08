@@ -7,6 +7,7 @@ import com.codekutter.salesman.common.LogUtils;
 import com.codekutter.salesman.core.model.Connections;
 import com.codekutter.salesman.core.model.Path;
 import com.codekutter.salesman.core.model.Point;
+import com.codekutter.salesman.core.model.Ring;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -14,7 +15,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.moeaframework.problem.tsplib.DataType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -58,25 +61,32 @@ public class Runner {
             int iteration = 0;
             int lastPrintCount = 10000;
             long st = System.currentTimeMillis();
+            Connections snapshot = null;
             while (true) {
                 lastPrintCount = run(reader, iteration, lastPrintCount, st);
-                if (connections.reachedClosure())  {
+                if (connections.reachedClosure()) {
                     for (int ii = 0; ii < reader.getNodeCount(); ii++) {
                         Point p = reader.cache().points()[ii];
                         iterator.checkOptimal(p, ii);
                     }
-                    if (connections.reachedClosure()) {
+                    if (connections.reachedClosure())
+                        break;
+                }
+                if (snapshot != null) {
+                    if (snapshot.isIdentical(connections)) {
                         break;
                     }
                 }
+                snapshot = connections.copy();
                 iteration++;
             }
+            List<Ring> rings = null;
             if (hasLocalEquilibrium()) {
                 LogUtils.info(getClass(), "Local equilibrium detected...");
-                detectRings();
+                rings = detectRings();
             }
             LogUtils.info(getClass(), String.format("Reached equilibrium : [#iterations=%d][time=%d]", iteration, (System.currentTimeMillis() - st)));
-            OutputPrinter.print(reader.cache(), connections, iteration);
+            OutputPrinter.print(reader.cache(), connections, iteration, rings);
         } catch (Exception ex) {
             LogUtils.error(getClass(), ex);
             throw new RuntimeException(ex);
@@ -95,21 +105,24 @@ public class Runner {
                             iteration, (System.currentTimeMillis() - st), (System.currentTimeMillis() - starttime) / 1000));
         }
         if (iteration > 0 && iteration % lastPrintCount == 0) {
-            OutputPrinter.print(reader.cache(), connections, iteration);
+            OutputPrinter.print(reader.cache(), connections, iteration, null);
             lastPrintCount *= (1 + Math.log10(iteration / 10000f));
         }
         return lastPrintCount;
     }
 
-    private void detectRings() {
+    private List<Ring> detectRings() {
+        List<Ring> rings = new ArrayList<>();
         Map<Integer, Point> passed = new HashMap<>();
         short ring = 0;
         for (Point point : reader.cache().points()) {
             if (passed.containsKey(point.sequence())) continue;
-            findRing(ring, point, passed);
+            Ring r = findRing(ring, point, passed);
+            rings.add(r);
             ring++;
         }
         LogUtils.info(getClass(), String.format("#rings = %d", ring));
+        return rings;
     }
 
     private boolean hasLocalEquilibrium() {
@@ -117,6 +130,9 @@ public class Runner {
         Point prevp = reader.cache().points()[0];
         Connections.Connection connection = connections.get(prevp);
         Path path = connection.connections()[0];
+        if (path == null) {
+            path = connection.connections()[1];
+        }
         check.put(prevp.sequence(), prevp);
         while (true) {
             Point target = path.getTarget(prevp);
@@ -131,6 +147,9 @@ public class Runner {
             }
             check.put(target.sequence(), target);
             prevp = target;
+            if (path == null) {
+                break;
+            }
         }
         if (check.size() != reader.cache().size()) {
             LogUtils.info(getClass(), String.format("Expected Size = %d, Loop Size = %d", reader.cache().size(), check.size()));
@@ -139,12 +158,17 @@ public class Runner {
         return false;
     }
 
-    private void findRing(short ring, Point start, Map<Integer, Point> passed) {
+    private Ring findRing(short ring, Point start, Map<Integer, Point> passed) {
+        Ring r = new Ring(ring);
         start.ring(ring);
 
         Point prevp = start;
         Connections.Connection connection = connections.get(prevp);
         Path path = connection.connections()[0];
+        if (path == null) {
+            path = connection.connections()[1];
+        }
+        r.add(path);
         passed.put(prevp.sequence(), prevp);
         while (true) {
             Point target = path.getTarget(prevp);
@@ -160,7 +184,13 @@ public class Runner {
             }
             passed.put(target.sequence(), target);
             prevp = target;
+            if (path == null) {
+                r.isClosed(false);
+                break;
+            }
+            r.add(path);
         }
+        return r;
     }
 
     public static void main(String... argv) {

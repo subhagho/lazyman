@@ -104,7 +104,7 @@ public class ClosedRunIterator {
             Path path = paths[ii];
             if (path == null) continue;
             Path pn = findNextValid(paths, ii);
-            if (pn == null) {
+            if (pn == null || pn.actualLength() < 0) {
                 continue;
             }
             double dist = pn.distance();
@@ -117,15 +117,12 @@ public class ClosedRunIterator {
             if (idx >= 0) {
                 return path;
             } else {
-                //double exp = Math.pow(1 + ii / (1f * paths.length), .5);
                 Path tp = findPathToReplace(tc, dist);
                 if (tp == null) continue;
-                double h = Math.pow((pn.distance() + useddist - mindist), .5);
-                //if (target.elevation() < h) {
+                double h = Math.pow((pn.distance() + useddist - mindist), 0.5f);
                 connections.remove(target, tp);
                 target.elevation(h + point.elevation());
                 return path;
-                //}
             }
         }
         return null;
@@ -144,10 +141,10 @@ public class ClosedRunIterator {
 
     private Path findPathToReplace(Connections.Connection connection, double distance) {
         Path p = null;
-        if (connection.connections()[0].distance() < distance) {
+        if (connection.connections()[0].actualLength() > 0 && connection.connections()[0].distance() < distance) {
             p = connection.connections()[0];
         }
-        if (connection.connections()[1].distance() < distance) {
+        if (connection.connections()[1].actualLength() > 0 && connection.connections()[1].distance() < distance) {
             if (p != null && connection.connections()[1].distance() > p.distance()) {
                 p = connection.connections()[1];
             }
@@ -155,16 +152,10 @@ public class ClosedRunIterator {
         return p;
     }
 
-    private Point getTarget(Point point, Path path) {
-        if (path.A().equals(point)) {
-            return path.B();
-        } else {
-            return path.A();
-        }
-    }
-
     private boolean canUse(Path path, Point point, Connections.Connection connection) {
         if (path.A().sequence() != point.sequence() && path.B().sequence() != point.sequence()) {
+            return false;
+        } else if (path.actualLength() < 0) {
             return false;
         } else {
             if (connection.connections() != null) {

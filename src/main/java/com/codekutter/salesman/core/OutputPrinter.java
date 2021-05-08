@@ -6,6 +6,7 @@ import com.codekutter.salesman.common.RunInfo;
 import com.codekutter.salesman.core.model.Connections;
 import com.codekutter.salesman.core.model.Path;
 import com.codekutter.salesman.core.model.Point;
+import com.codekutter.salesman.core.model.Ring;
 import lombok.NonNull;
 
 import java.io.File;
@@ -13,11 +14,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 
 public class OutputPrinter {
     public static final String DIR_ITERATION_OUTPUT = "iterations";
 
-    public static void print(@NonNull TSPDataMap cache, @NonNull Connections out, int iteration) {
+    public static void print(@NonNull TSPDataMap cache,
+                             @NonNull Connections out, int iteration, List<Ring> rings) {
         if (!LogUtils.isDebugEnabled()) return;
         try {
             String dir = Config.get().runInfo().createOutputDir(DIR_ITERATION_OUTPUT);
@@ -54,11 +57,38 @@ public class OutputPrinter {
             }
             LogUtils.info(OutputPrinter.class,
                     String.format("Written output file [iteration=%d][path=%s]", iteration, fout.getAbsolutePath()));
+            if (rings != null && !rings.isEmpty()) {
+                dir = String.format("%s/rings", dir);
+                File d = new File(dir);
+                if (!d.exists()) {
+                    d.mkdirs();
+                }
+                for (Ring ring : rings) {
+                    printRing(ring, d);
+                }
+            }
         } catch (Throwable ex) {
             LogUtils.error(OutputPrinter.class, ex);
         }
     }
 
+    private static void printRing(Ring ring, File dir) throws IOException {
+        String fname = String.format("%s/ring_%d.tsv", dir.getAbsolutePath(), ring.number());
+        try (FileOutputStream fos = new FileOutputStream(fname)) {
+            StringBuffer buffer = new StringBuffer();
+            RunInfo ri = Config.get().runInfo();
+            buffer.append(String.format("RUN ID\t%s\n", ri.runId()));
+            buffer.append(String.format("DATE\t%s\n\n", new Date().toString()));
+            buffer.append(String.format("RING\t%d\n", ring.number()));
+            buffer.append(String.format("SIZE\t%d\n", ring.ring().size()));
+            buffer.append(String.format("CLOSED\t%s\n\n", ring.isClosed()));
+
+            for (Path path : ring.ring()) {
+                buffer.append(String.format("%s\t%s\t%f\n", path.A(), path.B(), path.actualLength()));
+            }
+            fos.write(buffer.toString().getBytes(StandardCharsets.UTF_8));
+        }
+    }
 
     private static void printHeader(FileOutputStream fos, int iteration, TSPDataMap cache) throws IOException {
         StringBuffer buff = new StringBuffer();
