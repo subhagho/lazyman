@@ -8,11 +8,11 @@ import lombok.NonNull;
 
 import java.util.Arrays;
 
-public class ClosedRunIterator {
+public class RunIterator {
     private final TSPDataMap data;
     private final Connections connections;
 
-    public ClosedRunIterator(@NonNull TSPDataMap data, @NonNull Connections connections) {
+    public RunIterator(@NonNull TSPDataMap data, @NonNull Connections connections) {
         this.data = data;
         this.connections = connections;
     }

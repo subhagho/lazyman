@@ -160,6 +160,12 @@
             <artifactId>jackson-datatype-joda</artifactId>
             <version>2.10.1</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.github.vlsi.mxgraph/jgraphx -->
+        <dependency>
+            <groupId>com.github.vlsi.mxgraph</groupId>
+            <artifactId>jgraphx</artifactId>
+            <version>4.2.2</version>
+        </dependency>
 
     </dependencies>
     <build>

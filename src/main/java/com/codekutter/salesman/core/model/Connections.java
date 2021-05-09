@@ -15,6 +15,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @Accessors(fluent = true)
+@ToString
 public class Connections {
     @Getter
     @Setter

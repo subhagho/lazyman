@@ -21,6 +21,14 @@ public class Point implements BytesMarshallable {
     private String key;
     private short ring = -1;
 
+    public Point() {
+    }
+
+    public Point(double x, double y) {
+        X = x;
+        Y = y;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

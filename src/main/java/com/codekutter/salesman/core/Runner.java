@@ -36,7 +36,7 @@ public class Runner {
     @Setter(AccessLevel.NONE)
     private Connections connections;
     @Setter(AccessLevel.NONE)
-    private ClosedRunIterator iterator;
+    private RunIterator iterator;
 
     private void run() {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(config));
@@ -56,7 +56,7 @@ public class Runner {
                 reader.readTours(tourfile);
             }
             connections = new Connections(reader.getNodeCount());
-            iterator = new ClosedRunIterator(reader.cache(), connections);
+            iterator = new RunIterator(reader.cache(), connections);
 
             int iteration = 0;
             int lastPrintCount = 10000;
@@ -122,7 +122,36 @@ public class Runner {
             ring++;
         }
         LogUtils.info(getClass(), String.format("#rings = %d", ring));
+        if (ring > 1) {
+            detectLevels(rings);
+        }
         return rings;
+    }
+
+
+    private void detectLevels(List<Ring> rings) {
+        for (int ii = 0; ii < rings.size(); ii++) {
+            Ring o = rings.get(ii);
+            if (!o.isClosed()) continue;
+            Point[] polygon = o.getPolygon();
+            for (int jj = 0; jj < rings.size(); jj++) {
+                if (ii == jj) continue;
+                Ring i = rings.get(jj);
+                Path p = i.ring().get(0);
+                Point point = p.A();
+                if (point == null) {
+                    point = p.B();
+                }
+                if (GFG.isInside(polygon, polygon.length, point)) {
+                    Ring e = i.enclosing();
+                    short l = (short) (o.level() + 1);
+                    if (e == null || e.level() < l) {
+                        i.enclosing(o);
+                    }
+                    i.level(l);
+                }
+            }
+        }
     }
 
     private boolean hasLocalEquilibrium() {
@@ -177,9 +206,13 @@ public class Runner {
             }
             target.ring(ring);
             connection = connections.get(target);
-            if (!connection.connections()[0].getTarget(target).equals(prevp)) {
+            if (connection.connections()[0] == null && connection.connections()[1] == null) {
+                throw new RuntimeException(String.format("Both connections are NULL. [connection=%s]", connection));
+            }
+            if (connection.connections()[0] != null
+                    && !connection.connections()[0].getTarget(target).equals(prevp)) {
                 path = connection.connections()[0];
-            } else {
+            } else if (connection.connections()[1] != null) {
                 path = connection.connections()[1];
             }
             passed.put(target.sequence(), target);

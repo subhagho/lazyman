@@ -21,7 +21,6 @@ public class OutputPrinter {
 
     public static void print(@NonNull TSPDataMap cache,
                              @NonNull Connections out, int iteration, List<Ring> rings) {
-        if (!LogUtils.isDebugEnabled()) return;
         try {
             String dir = Config.get().runInfo().createOutputDir(DIR_ITERATION_OUTPUT);
             String file = String.format("iteration_%d.tsv", iteration);
@@ -80,12 +79,16 @@ public class OutputPrinter {
             buffer.append(String.format("RUN ID\t%s\n", ri.runId()));
             buffer.append(String.format("DATE\t%s\n\n", new Date().toString()));
             buffer.append(String.format("RING\t%d\n", ring.number()));
+            buffer.append(String.format("LEVEL\t%d\n", ring.level()));
+            buffer.append(String.format("ENCLOSING\t%d\n", (ring.enclosing() != null ? ring.enclosing().number() : -1)));
             buffer.append(String.format("SIZE\t%d\n", ring.ring().size()));
             buffer.append(String.format("CLOSED\t%s\n\n", ring.isClosed()));
-
+            double dist = 0;
             for (Path path : ring.ring()) {
                 buffer.append(String.format("%s\t%s\t%f\n", path.A(), path.B(), path.actualLength()));
+                dist += path.actualLength();
             }
+            buffer.append(String.format("TOTAL DISTANCE\t%f\n", dist));
             fos.write(buffer.toString().getBytes(StandardCharsets.UTF_8));
         }
     }
