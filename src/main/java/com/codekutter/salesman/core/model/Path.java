@@ -25,6 +25,7 @@ public class Path implements BytesMarshallable, Comparable<Path> {
         this.A = A;
         this.B = B;
         this.actualLength = length;
+        this.length = actualLength;
     }
 
     public Path(@NonNull Point A, @NonNull Point B) {
@@ -34,6 +35,7 @@ public class Path implements BytesMarshallable, Comparable<Path> {
         actualLength = Math.sqrt(Math.pow((A.X() - B.X()), 2) + Math.pow((A.Y() - B.Y()), 2));
         this.A = A;
         this.B = B;
+        this.length = actualLength;
     }
 
     public double distance() {
@@ -42,6 +44,13 @@ public class Path implements BytesMarshallable, Comparable<Path> {
             return Math.sqrt(Math.pow(length, 2) + Math.pow(h, 2));
         }
         return -1;
+    }
+
+    public double elevation() {
+        if (A != null && B != null) {
+            return Math.sqrt(Math.pow(A.elevation() - B.elevation(), 2));
+        }
+        return Long.MAX_VALUE;
     }
 
     public Point getTarget(@NonNull Point source) {
@@ -73,6 +82,17 @@ public class Path implements BytesMarshallable, Comparable<Path> {
         if (o == null || getClass() != o.getClass()) return false;
         Path path = (Path) o;
         return (A.equals(path.A) && B.equals(path.B)) || (A.equals(path.B) && B.equals(path.A));
+    }
+
+    public String pathKey() {
+        Point a = (A.sequence() < B.sequence() ? A : B);
+        Point b = (A.sequence() < B.sequence() ? B : A);
+        return String.format("%d->%d", a.sequence(), b.sequence());
+    }
+
+    public String edgeString() {
+        String pk = pathKey();
+        return String.format("%s[%f]", pk, actualLength);
     }
 
     @Override

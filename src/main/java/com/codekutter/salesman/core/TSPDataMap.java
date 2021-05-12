@@ -62,11 +62,6 @@ public class TSPDataMap implements Closeable {
             if (paths != null) {
                 Arrays.sort(paths, sorter);
                 Point p = points()[ii];
-                double mind = paths[0].actualLength();
-                for (Path pp : paths) {
-                    if (pp == null) continue;
-                    pp.length(pp.actualLength() - mind);
-                }
                 minDistances.put(p.hashKey(), new double[]{paths[0].distance(), paths[1].distance()});
             }
         }

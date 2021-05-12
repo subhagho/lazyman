@@ -160,12 +160,13 @@
             <artifactId>jackson-datatype-joda</artifactId>
             <version>2.10.1</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.github.vlsi.mxgraph/jgraphx -->
+        <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-controls -->
         <dependency>
-            <groupId>com.github.vlsi.mxgraph</groupId>
-            <artifactId>jgraphx</artifactId>
-            <version>4.2.2</version>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>14.0.2.1</version>
         </dependency>
+
 
     </dependencies>
     <build>

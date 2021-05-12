@@ -3,7 +3,6 @@ package com.codekutter.salesman.core.model;
 import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 import net.openhft.chronicle.bytes.BytesMarshallable;
 
@@ -11,7 +10,6 @@ import java.util.Objects;
 
 @Getter
 @Setter
-@ToString
 @Accessors(fluent = true)
 public class Point implements BytesMarshallable {
     private int sequence;
@@ -39,6 +37,14 @@ public class Point implements BytesMarshallable {
         ret = ret && (X == null && point.X == null || (X != null && X.equals(point.X))) && (Y == null && point.Y == null || (Y != null && Y.equals(point.Y)));
 
         return ret;
+    }
+
+    @Override
+    public String toString() {
+        return "P{" +
+                "" + X +
+                ", " + Y + ", " + elevation +
+                '}';
     }
 
     @Override

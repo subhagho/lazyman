@@ -8,6 +8,8 @@ import com.codekutter.salesman.core.model.Connections;
 import com.codekutter.salesman.core.model.Path;
 import com.codekutter.salesman.core.model.Point;
 import com.codekutter.salesman.core.model.Ring;
+import com.codekutter.salesman.ui.Helper;
+import com.codekutter.salesman.ui.Viewer;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -62,19 +64,19 @@ public class Runner {
             int lastPrintCount = 10000;
             long st = System.currentTimeMillis();
             Connections snapshot = null;
+            short iCount = 0;
             while (true) {
-                lastPrintCount = run(reader, iteration, lastPrintCount, st);
+                lastPrintCount = run(reader, snapshot, iteration, lastPrintCount, st);
                 if (connections.reachedClosure()) {
-                    for (int ii = 0; ii < reader.getNodeCount(); ii++) {
-                        Point p = reader.cache().points()[ii];
-                        iterator.checkOptimal(p, ii);
-                    }
-                    if (connections.reachedClosure())
-                        break;
+                    break;
                 }
                 if (snapshot != null) {
                     if (snapshot.isIdentical(connections)) {
-                        break;
+                        if (iCount > 3)
+                            break;
+                        else iCount++;
+                    } else {
+                        iCount = 0;
                     }
                 }
                 snapshot = connections.copy();
@@ -87,17 +89,26 @@ public class Runner {
             }
             LogUtils.info(getClass(), String.format("Reached equilibrium : [#iterations=%d][time=%d]", iteration, (System.currentTimeMillis() - st)));
             OutputPrinter.print(reader.cache(), connections, iteration, rings);
+            Helper.connections = connections;
+            Helper.points = reader.cache().points();
+            Helper.tours = reader.tours();
+
+            Viewer.show();
         } catch (Exception ex) {
             LogUtils.error(getClass(), ex);
             throw new RuntimeException(ex);
         }
     }
 
-    private int run(TSPDataReader reader, int iteration, int lastPrintCount, long starttime) {
+    private int run(TSPDataReader reader, Connections snapshot, int iteration, int lastPrintCount, long starttime) {
         long st = System.currentTimeMillis();
         for (int ii = 0; ii < reader.getNodeCount(); ii++) {
             Point p = reader.cache().points()[ii];
-            iterator.run(iteration, p, ii);
+            Connections.Connection prev = null;
+            if (snapshot != null) {
+                prev = snapshot.get(p);
+            }
+            iterator.run(prev, p, ii);
         }
         if (iteration % 10000 == 0) {
             LogUtils.info(getClass(),
@@ -115,11 +126,23 @@ public class Runner {
         List<Ring> rings = new ArrayList<>();
         Map<Integer, Point> passed = new HashMap<>();
         short ring = 0;
+        for (Connections.Connection connection : connections.connections().values()) {
+            if (connection.isComplete()) continue;
+            Point point = connection.point();
+            if (passed.containsKey(point.sequence())) continue;
+            Ring r = findRing(ring, point, passed);
+            if (r != null) {
+                rings.add(r);
+                ring++;
+            }
+        }
         for (Point point : reader.cache().points()) {
             if (passed.containsKey(point.sequence())) continue;
             Ring r = findRing(ring, point, passed);
-            rings.add(r);
-            ring++;
+            if (r != null) {
+                rings.add(r);
+                ring++;
+            }
         }
         LogUtils.info(getClass(), String.format("#rings = %d", ring));
         if (ring > 1) {
@@ -169,9 +192,13 @@ public class Runner {
                 break;
             }
             connection = connections.get(target);
-            if (!connection.connections()[0].getTarget(target).equals(prevp)) {
+            if (connection.connections()[0] == null && connection.connections()[1] == null) {
+                throw new RuntimeException(String.format("Both connections are NULL. [connection=%s]", connection));
+            }
+            if (connection.connections()[0] != null
+                    && !connection.connections()[0].getTarget(target).equals(prevp)) {
                 path = connection.connections()[0];
-            } else {
+            } else if (connection.connections()[1] != null) {
                 path = connection.connections()[1];
             }
             check.put(target.sequence(), target);
@@ -197,6 +224,8 @@ public class Runner {
         if (path == null) {
             path = connection.connections()[1];
         }
+        if (path == null) return null;
+
         r.add(path);
         passed.put(prevp.sequence(), prevp);
         while (true) {

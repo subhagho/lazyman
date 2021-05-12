@@ -109,6 +109,7 @@ public class Connections {
 
     private final int size;
     private Map<String, Connection> connections = new HashMap<>();
+    private Map<String, Bid> bidHistory = new HashMap<>();
 
     public Connections(int size) {
         this.size = size;
