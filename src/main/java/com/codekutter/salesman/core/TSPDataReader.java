@@ -120,6 +120,7 @@ public class TSPDataReader implements Closeable {
             }
         }
         for (int ii = 0; ii < cache.points().length; ii++) {
+            LogUtils.info(getClass(), String.format("Loading path. [sequence=%d]...", ii));
             for (int jj = 0; jj < cache.points().length; jj++) {
                 if (jj <= ii) continue;
                 Path path = new Path(cache.points()[ii], cache.points()[jj]);

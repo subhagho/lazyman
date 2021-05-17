@@ -33,6 +33,8 @@ public class Runner {
     private String tspDataType;
     @Parameter(names = {"--result", "-r"}, description = "Result tour file path.", required = false)
     private String tourfile;
+    @Parameter(names = {"--view", "-v"}, description = "View output.")
+    private boolean view = false;
     @Setter(AccessLevel.NONE)
     private TSPDataReader reader;
     @Setter(AccessLevel.NONE)
@@ -89,11 +91,13 @@ public class Runner {
             }
             LogUtils.info(getClass(), String.format("Reached equilibrium : [#iterations=%d][time=%d]", iteration, (System.currentTimeMillis() - st)));
             OutputPrinter.print(reader.cache(), connections, iteration, rings);
-            Helper.connections = connections;
-            Helper.points = reader.cache().points();
-            Helper.tours = reader.tours();
+            if (view) {
+                Helper.connections = connections;
+                Helper.points = reader.cache().points();
+                Helper.tours = reader.tours();
 
-            Viewer.show();
+                Viewer.show();
+            }
         } catch (Exception ex) {
             LogUtils.error(getClass(), ex);
             throw new RuntimeException(ex);
@@ -219,18 +223,28 @@ public class Runner {
         start.ring(ring);
 
         Point prevp = start;
+        Path patho = null;
         Connections.Connection connection = connections.get(prevp);
         Path path = connection.connections()[0];
         if (path == null) {
             path = connection.connections()[1];
+        } else {
+            patho = connection.connections()[1];
         }
         if (path == null) return null;
 
         r.add(path);
         passed.put(prevp.sequence(), prevp);
+        boolean both = (patho != null);
         while (true) {
             Point target = path.getTarget(prevp);
             if (passed.containsKey(target.sequence())) {
+                if (both) {
+                    path = patho;
+                    prevp = start;
+                    both = false;
+                    continue;
+                }
                 break;
             }
             target.ring(ring);

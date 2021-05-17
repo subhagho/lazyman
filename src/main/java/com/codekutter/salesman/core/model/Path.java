@@ -18,6 +18,7 @@ public class Path implements BytesMarshallable, Comparable<Path> {
     private Point A;
     @Setter(AccessLevel.NONE)
     private Point B;
+    private double elevation = 0;
     private double length;
     private final double actualLength;
 
@@ -40,8 +41,16 @@ public class Path implements BytesMarshallable, Comparable<Path> {
 
     public double distance() {
         if (A != null && B != null) {
-            double h = A.elevation() - B.elevation();
-            return Math.sqrt(Math.pow(length, 2) + Math.pow(h, 2));
+            if (elevation == 0) {
+                double h = A.elevation() - B.elevation();
+                return Math.sqrt(Math.pow(length, 2) + Math.pow(h, 2));
+            } else {
+                double h1 = elevation - A.elevation();
+                double d1 = Math.sqrt(Math.pow(length / 2f, 2) + Math.pow(h1, 2));
+                double h2 = elevation - B.elevation();
+                double d2 = Math.sqrt(Math.pow(length / 2f, 2) + Math.pow(h2, 2));
+                return d1 + d2;
+            }
         }
         return -1;
     }
@@ -69,6 +78,10 @@ public class Path implements BytesMarshallable, Comparable<Path> {
             return A;
         }
         return null;
+    }
+
+    public boolean hasPoint(@NonNull Point point) {
+        return A.sequence() == point.sequence() || B.sequence() == point.sequence();
     }
 
     @Override

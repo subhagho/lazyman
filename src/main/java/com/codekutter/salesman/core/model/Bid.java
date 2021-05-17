@@ -41,7 +41,7 @@ public class Bid {
         }
         bt.elevation = elevation;
         bt.count++;
-        //point.elevation(computeElevation());
+        point.elevation(computeElevation());
     }
 
     public double computeElevation() {

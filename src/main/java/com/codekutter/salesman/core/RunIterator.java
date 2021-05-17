@@ -125,7 +125,7 @@ public class RunIterator {
             if (idx >= 0) {
                 return path;
             } else {
-                double h = Math.pow((pn.distance() + useddist - mindist), 0.5f) + point.elevation();
+                double h = Math.pow((Math.sqrt(Math.pow(pn.distance() + useddist, 2) - Math.pow(mindist, 2))), .5) + point.elevation();
                 Path tp = findPathToReplace(tc, dist);
                 if (tp == null) continue;
                 //if (bid != null && !bid.shouldBid(path, h)) continue;
