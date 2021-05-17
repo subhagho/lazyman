@@ -81,10 +81,10 @@ public class OutputPrinter {
             buffer.append(String.format("RING\t%d\n", ring.number()));
             buffer.append(String.format("LEVEL\t%d\n", ring.level()));
             buffer.append(String.format("ENCLOSING\t%d\n", (ring.enclosing() != null ? ring.enclosing().number() : -1)));
-            buffer.append(String.format("SIZE\t%d\n", ring.ring().size()));
+            buffer.append(String.format("SIZE\t%d\n", ring.paths().size()));
             buffer.append(String.format("CLOSED\t%s\n\n", ring.isClosed()));
             double dist = 0;
-            for (Path path : ring.ring()) {
+            for (Path path : ring.paths()) {
                 buffer.append(String.format("%s\t%s\t%f\n", path.A(), path.B(), path.actualLength()));
                 dist += path.actualLength();
             }

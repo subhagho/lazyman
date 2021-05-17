@@ -96,11 +96,11 @@ public class RingProcessor {
     private Connect connectClosedRings(Ring source, Ring target, TSPDataMap data) {
         double mindist = Double.MAX_VALUE;
         Connect minpaths = null;
-        for (int ii = 0; ii < source.ring().size(); ii++) {
-            double ds = source.ring().get(ii).distance();
-            for (int jj = 0; jj < target.ring().size(); jj++) {
-                double dt = target.ring().get(jj).distance();
-                Path[] paths = findMinPaths(source.ring().get(ii), target.ring().get(jj), data);
+        for (int ii = 0; ii < source.paths().size(); ii++) {
+            double ds = source.paths().get(ii).distance();
+            for (int jj = 0; jj < target.paths().size(); jj++) {
+                double dt = target.paths().get(jj).distance();
+                Path[] paths = findMinPaths(source.paths().get(ii), target.paths().get(jj), data);
                 if (paths != null && paths[0] != null && paths[1] != null) {
                     double delta = (paths[0].distance() + paths[1].distance()) - (ds + dt);
                     if (delta < mindist) {
@@ -110,8 +110,8 @@ public class RingProcessor {
                         }
                         minpaths.p1 = paths[0];
                         minpaths.p2 = paths[1];
-                        minpaths.spath = source.ring().get(ii);
-                        minpaths.tpath = target.ring().get(jj);
+                        minpaths.spath = source.paths().get(ii);
+                        minpaths.tpath = target.paths().get(jj);
                         minpaths.delta = delta;
                     }
                 }
@@ -160,10 +160,10 @@ public class RingProcessor {
     }
 
     private void markOpenRingConnections(Ring ring, TSPDataMap source) {
-        for (Path po : ring.ring()) {
+        for (Path po : ring.paths()) {
             Point poa = po.A();
             Point pob = po.B();
-            for (Path pi : ring.ring()) {
+            for (Path pi : ring.paths()) {
                 if (po.equals(pi)) continue;
                 Point pia = pi.A();
                 Point pib = pi.B();

@@ -41,7 +41,7 @@ public class Point implements BytesMarshallable {
 
     @Override
     public String toString() {
-        return String.format("[%d]{%f}", sequence, elevation);
+        return String.format("[%d (%d)]{%f}", sequence, ring, elevation);
     }
 
     @Override

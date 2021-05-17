@@ -164,7 +164,7 @@ public class Runner {
             for (int jj = 0; jj < rings.size(); jj++) {
                 if (ii == jj) continue;
                 Ring i = rings.get(jj);
-                Path p = i.ring().get(0);
+                Path p = i.paths().get(0);
                 Point point = p.A();
                 if (point == null) {
                     point = p.B();
@@ -239,6 +239,26 @@ public class Runner {
         while (true) {
             Point target = path.getTarget(prevp);
             if (passed.containsKey(target.sequence())) {
+                break;
+            }
+            target.ring(ring);
+            passed.put(target.sequence(), target);
+            connection = connections.get(target);
+            if (connection.connections()[0] == null && connection.connections()[1] == null) {
+                throw new RuntimeException(String.format("Both connections are NULL. [connection=%s]", connection));
+            }
+
+            if (connection.connections()[0] != null
+                    && !connection.connections()[0].getTarget(target).equals(prevp)) {
+                path = connection.connections()[0];
+            } else if (connection.connections()[1] != null
+                    && !connection.connections()[1].getTarget(target).equals(prevp)) {
+                path = connection.connections()[1];
+            } else {
+                path = null;
+            }
+            if (path == null) {
+                r.isClosed(false);
                 if (both) {
                     path = patho;
                     prevp = start;
@@ -247,25 +267,10 @@ public class Runner {
                 }
                 break;
             }
-            target.ring(ring);
-            connection = connections.get(target);
-            if (connection.connections()[0] == null && connection.connections()[1] == null) {
-                throw new RuntimeException(String.format("Both connections are NULL. [connection=%s]", connection));
-            }
-            if (connection.connections()[0] != null
-                    && !connection.connections()[0].getTarget(target).equals(prevp)) {
-                path = connection.connections()[0];
-            } else if (connection.connections()[1] != null) {
-                path = connection.connections()[1];
-            }
-            passed.put(target.sequence(), target);
             prevp = target;
-            if (path == null) {
-                r.isClosed(false);
-                break;
-            }
             r.add(path);
         }
+        r.validate();
         return r;
     }
 

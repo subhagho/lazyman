@@ -1,6 +1,5 @@
 package com.codekutter.salesman.core.model;
 
-import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -13,68 +12,81 @@ import java.util.List;
 @Setter
 @Accessors(fluent = true)
 public class Ring {
-    @Getter
-    @Setter
-    @Accessors(fluent = true)
-    public static class RingConnection {
-        private short number;
-        private Path[] paths;
-    }
 
     private final short number;
-    private List<Path> ring = new ArrayList<>();
+    private List<Path> paths = new ArrayList<>();
     private boolean isClosed = true;
     private short level = 0;
     private Ring enclosing = null;
-    private RingConnection[] connections;
 
     public Ring(short number) {
         this.number = number;
     }
 
     public Ring add(@NonNull Path connection) {
-        ring.add(connection);
+        if (!paths.isEmpty()) {
+            if (exists(connection)) {
+                throw new RuntimeException(String.format("Path already exists. [path=%s]", connection.toString()));
+            }
+            Path lp = paths.get(paths.size() - 1);
+            if (lp.hasPoint(connection.A()) || lp.hasPoint(connection.B())) {
+                paths.add(connection);
+            } else {
+                lp = null;
+                boolean added = false;
+                for (int ii = 0; ii < paths.size(); ii++) {
+                    Path np = paths.get(ii);
+                    if (np.hasPoint(connection.A()) || np.hasPoint(connection.B())) {
+                        if (lp == null) {
+                            paths.add(ii, connection);
+                            added = true;
+                        } else if (lp.hasPoint(connection.A()) || lp.hasPoint(connection.B())) {
+                            paths.add(ii, connection);
+                            added = true;
+                        }
+                    }
+                    lp = np;
+                }
+                if (!added) {
+                    throw new RuntimeException(String.format("Cannot add connection. [path=%s]", connection.toString()));
+                }
+            }
+        } else
+            paths.add(connection);
         return this;
     }
 
-    public void initConnections(int size) {
-        connections = new RingConnection[size];
-    }
-
-    public void addConnection(short ring, @NonNull Path[] paths) {
-        Preconditions.checkState(connections != null);
-        Preconditions.checkArgument(ring < connections.length);
-
-        if (connections[ring] == null) {
-            connections[ring] = new RingConnection();
-            connections[ring].number = ring;
-        }
-        connections[ring].paths = paths;
-    }
-
-    public Path[] findRingConnection(@NonNull Point point) {
-        if (connections != null) {
-            for (int ii = 0; ii < connections.length; ii++) {
-                if (connections[ii] != null && connections[ii].paths != null) {
-                    for (Path p : connections[ii].paths) {
-                        if (p != null) {
-                            if (p.hasPoint(point)) {
-                                return connections[ii].paths;
-                            }
-                        }
-                    }
+    public boolean exists(@NonNull Path path) {
+        if (!paths.isEmpty()) {
+            for (Path p : paths) {
+                if (p.equals(path)) {
+                    return true;
                 }
             }
         }
-        return null;
+        return false;
+    }
+
+    public void validate() {
+        Path s = paths.get(0);
+        Path e = paths.get(paths.size() - 1);
+        if (isClosed) {
+            if (!s.hasPoint(e.A()) && !s.hasPoint(e.B())) {
+                throw new RuntimeException("Ring is marked as closed, but isn't closed...");
+            }
+        } else {
+            if (s.hasPoint(e.A()) || s.hasPoint(e.B())) {
+                throw new RuntimeException("Ring is marked as open, but is closed...");
+            }
+        }
     }
 
     public Point[] getPolygon() {
-        if (isClosed && ring != null && !ring.isEmpty()) {
-            Point[] array = new Point[ring.size() + 1];
+        if (isClosed && paths != null && !paths.isEmpty()) {
+            Point[] array = new Point[paths.size() + 1];
             Path lastP = null;
-            for (int ii = 0; ii < ring.size(); ii++) {
-                Path p = ring.get(ii);
+            for (int ii = 0; ii < paths.size(); ii++) {
+                Path p = paths.get(ii);
                 if (lastP == null) {
                     array[0] = p.A();
                     array[1] = p.B();
@@ -83,7 +95,7 @@ public class Ring {
                     if (target == null) {
                         target = p.getTarget(lastP.B());
                     }
-                    if (target == null && ii < ring.size() - 1) {
+                    if (target == null && ii < paths.size() - 1) {
                         throw new RuntimeException(String.format("Invalid ring path : [path=%s]", p.toString()));
                     }
                     array[ii + 1] = target;
