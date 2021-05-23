@@ -10,7 +10,9 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RingProcessor {
     @Getter
@@ -19,60 +21,105 @@ public class RingProcessor {
     private class Connect {
         Path p1;
         Path p2;
-        Path spath;
-        Path tpath;
+        Path sourcePath;
+        Path targetPath;
         double delta;
+
+        public double getOpenDelta() {
+            double d = 0;
+            if (p1 != null) {
+                d += p1.distance();
+            }
+            if (p2 != null) {
+                d += p2.distance();
+            }
+            d -= sourcePath.distance();
+            return d;
+        }
     }
 
     public void process(@NonNull List<Ring> rings, @NonNull String name,
                         TSPDataMap source, Connections connections) {
         markConnections(connections, source);
+        List<Ring> openRings = new ArrayList<>();
         for (Ring ring : rings) {
             if (!ring.isClosed()) {
                 markOpenRingConnections(ring, source);
+                openRings.add(ring);
             }
-            markRingConnections(ring, rings, source);
+            markRingConnections(ring, rings, openRings, source, connections);
         }
     }
 
-    private void markRingConnections(Ring ring, List<Ring> rings, TSPDataMap source) {
-        List<Connect> connects = new ArrayList<>();
+    private void markRingConnections(Ring ring, List<Ring> rings, List<Ring> openRings,
+                                     TSPDataMap source, Connections connections) {
+        Map<String, List<Connect>> connects = new HashMap<>();
+        if (ring.isClosed()) {
+            Connect c = connectClosedToOpenRings(ring, openRings, source);
+            if (c != null) {
+                addConnect(connects, c);
+            }
+        }
         for (Ring ir : rings) {
             if (!canConnect(ring, ir)) continue;
             Connect c = null;
             if (ring.isClosed() && ir.isClosed()) {
                 c = connectClosedRings(ring, ir, source);
                 if (c != null) {
-                    connects.add(c);
+                    addConnect(connects, c);
                 }
             } else if (!ring.isClosed() && !ir.isClosed()) {
                 c = connectOpenRings(ring, ir, source);
                 if (c != null) {
-                    connects.add(c);
+                    addConnect(connects, c);
                 }
             } else {
-                c = connectClosedToOpenRings(ring, ir, source);
-                if (c != null) {
-                    connects.add(c);
+                if (!ring.isClosed()) {
+                    c = connectOpenToClosedRings(ring, ir, source);
+                    if (c != null) {
+                        addConnect(connects, c);
+                    }
                 }
             }
         }
         if (!connects.isEmpty()) {
-            Connect mc = null;
-            for (Connect c : connects) {
-                if (mc == null) {
-                    mc = c;
-                } else {
-                    if (c.delta < mc.delta()) {
-                        mc = c;
-                    }
-                }
-            }
-            if (mc != null) {
-                double h = Math.sqrt(Math.pow(mc.delta, 2) + Math.pow(mc.spath.A().elevation() + mc.spath.B().elevation(), 2));
-                mc.spath.elevation(h);
+            if (ring.isClosed()) {
+                resolveClosedConnect(ring, connects, connections);
+            } else {
+                resolveOpenConnect(ring, connects, connections);
             }
         }
+    }
+
+    private void resolveClosedConnect(Ring ring, Map<String, List<Connect>> connects, Connections connections) {
+        Connect connect = null;
+        double delta = Double.MAX_VALUE;
+        for (String key : connects.keySet()) {
+            List<Connect> cs = connects.get(key);
+            if (!cs.isEmpty()) {
+                if (cs.size() == 1) {
+                    double d = cs.get(0).getOpenDelta();
+                    if (d < delta) {
+                        connect = cs.get(0);
+                        delta = d;
+                    }
+                } else {
+
+                }
+            }
+        }
+    }
+
+    private void resolveOpenConnect(Ring ring, Map<String, List<Connect>> connects, Connections connections) {
+
+    }
+
+    private void addConnect(Map<String, List<Connect>> connects, Connect connect) {
+        String key = connect.sourcePath.pathKey();
+        if (!connects.containsKey(key)) {
+            connects.put(key, new ArrayList<>());
+        }
+        connects.get(key).add(connect);
     }
 
     private boolean canConnect(Ring source, Ring target) {
@@ -110,8 +157,8 @@ public class RingProcessor {
                         }
                         minpaths.p1 = paths[0];
                         minpaths.p2 = paths[1];
-                        minpaths.spath = source.paths().get(ii);
-                        minpaths.tpath = target.paths().get(jj);
+                        minpaths.sourcePath = source.paths().get(ii);
+                        minpaths.targetPath = target.paths().get(jj);
                         minpaths.delta = delta;
                     }
                 }
@@ -124,11 +171,93 @@ public class RingProcessor {
         return minpaths;
     }
 
-    private Connect connectClosedToOpenRings(Ring source, Ring target, TSPDataMap data) {
-        return null;
+    private Connect connectClosedToOpenRings(Ring source, List<Ring> openRings, TSPDataMap data) {
+        Connect minpaths = null;
+        for (int ii = 0; ii < source.paths().size(); ii++) {
+            for (Ring ring : openRings) {
+                Connect c = findConnection(source.paths().get(ii), ring, data);
+                if (c != null) {
+                    if (minpaths == null) {
+                        minpaths = c;
+                    } else {
+                        double d1 = c.getOpenDelta();
+                        double d2 = minpaths.getOpenDelta();
+                        if (d1 < d2) {
+                            minpaths = c;
+                        }
+                    }
+                }
+            }
+        }
+        return minpaths;
+    }
+
+    private Connect findConnection(Path source, Ring target, TSPDataMap data) {
+        Point s1 = source.A();
+        Point s2 = source.B();
+        double d = Double.MAX_VALUE;
+        Connect c = new Connect();
+        c.sourcePath = source;
+        c.targetPath = null;
+        List<Path> ps1 = getSortedPaths(s1, target, data);
+        List<Path> ps2 = getSortedPaths(s2, target, data);
+        for (Path p1 : ps1) {
+            Point t1 = p1.getTarget(s1);
+            double d1 = p1.distance();
+            for (Path p2 : ps2) {
+                Point t2 = p2.getTarget(s2);
+                if (t1.equals(t2)) continue;
+
+                double d2 = p2.distance();
+                if (d1 + d2 < d) {
+                    d = d1 + d2;
+                    c.p1 = p1;
+                    c.p2 = p2;
+                }
+            }
+        }
+        data.togglePath(c.p1.A().sequence(), c.p1.B().sequence(), true);
+        data.togglePath(c.p2.A().sequence(), c.p2.B().sequence(), true);
+        return c;
+    }
+
+    private List<Path> getSortedPaths(Point point, Ring target, TSPDataMap dataMap) {
+        List<Path> paths = new ArrayList<>();
+        Point lp = null;
+        for (int ii = 0; ii < target.paths().size(); ii++) {
+            Path path = target.paths().get(ii);
+            if (lp == null) {
+                Point p1 = path.A();
+                Point p2 = path.B();
+                Path p = dataMap.get(point.sequence(), p1.sequence());
+                paths.add(p);
+                p = dataMap.get(point.sequence(), p2.sequence());
+                paths.add(p);
+
+                Path pn = target.paths().get(ii + 1);
+                if (pn.hasPoint(p1)) {
+                    lp = p1;
+                } else if (pn.hasPoint(p2)) {
+                    lp = p2;
+                } else {
+                    throw new RuntimeException(String.format("Invalid ring: next path not found. [path=%s]", pn.toString()));
+                }
+            } else {
+                Point pn = path.getTarget(lp);
+                Path p = dataMap.get(point.sequence(), pn.sequence());
+                paths.add(p);
+                lp = path.getTarget(lp);
+            }
+        }
+        paths.sort(new Path.SortByDistance());
+        return paths;
     }
 
     private Connect connectOpenRings(Ring source, Ring target, TSPDataMap data) {
+        return null;
+    }
+
+    private Connect connectOpenToClosedRings(Ring source, Ring target, TSPDataMap data) {
         return null;
     }
 
