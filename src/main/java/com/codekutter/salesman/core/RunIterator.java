@@ -1,7 +1,6 @@
 package com.codekutter.salesman.core;
 
 import com.codekutter.salesman.common.LogUtils;
-import com.codekutter.salesman.core.model.Bid;
 import com.codekutter.salesman.core.model.Connections;
 import com.codekutter.salesman.core.model.Path;
 import com.codekutter.salesman.core.model.Point;
@@ -35,7 +34,6 @@ public class RunIterator {
                 Path path = reserve(point, connection, ii, paths, paths.length);
                 if (path != null) {
                     Point t = path.getTarget(point);
-                    addBid(point, path, t.elevation());
                     connections.add(path);
                 } else {
                     throw new RuntimeException(String.format("Unable to reserve path. [point=%s]", point.toString()));
@@ -61,7 +59,6 @@ public class RunIterator {
         Path path = reserve(point, connection, idx, paths, stopIdx);
         if (path != null) {
             Point t = path.getTarget(point);
-            addBid(point, path, t.elevation());
             connections.remove(point, connection.connections()[idx]);
             connections.add(path);
         }
@@ -71,7 +68,6 @@ public class RunIterator {
         path = reserve(point, connection, idx, paths, stopIdx);
         if (path != null) {
             Point t = path.getTarget(point);
-            addBid(point, path, t.elevation());
             connections.remove(point, connection.connections()[idx]);
             connections.add(path);
         }
@@ -98,7 +94,6 @@ public class RunIterator {
     }
 
     private Path reserve(Point point, Connections.Connection connection, int index, Path[] paths, int stopIndex) {
-        Bid bid = connections.bidHistory().get(point.hashKey());
         double mindist = getMinDistance(point, connection);
         double useddist = 0;
         if (connection.connections() != null) {
@@ -128,22 +123,12 @@ public class RunIterator {
                 double h = Math.pow((Math.sqrt(Math.pow(pn.distance() + useddist, 2) - Math.pow(mindist, 2))), .5) + point.elevation();
                 Path tp = findPathToReplace(tc, dist);
                 if (tp == null) continue;
-                //if (bid != null && !bid.shouldBid(path, h)) continue;
                 connections.remove(target, tp);
                 target.elevation(h);
                 return path;
             }
         }
         return null;
-    }
-
-    private void addBid(Point point, Path path, double elevation) {
-        Bid bid = connections.bidHistory().get(point.hashKey());
-        if (bid == null) {
-            bid = new Bid(point);
-            connections.bidHistory().put(point.hashKey(), bid);
-        }
-        bid.add(path, elevation);
     }
 
     private Path findNextValid(Path[] paths, Point point, Connections.Connection connection, int index) {
@@ -172,6 +157,7 @@ public class RunIterator {
     }
 
     private boolean canUse(Path path, Point point, Connections.Connection connection) {
+        if (!path.usable()) return false;
         if (path.A().sequence() != point.sequence() && path.B().sequence() != point.sequence()) {
             return false;
         } else if (path.length() < 0) {

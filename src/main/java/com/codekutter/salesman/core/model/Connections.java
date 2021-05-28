@@ -109,7 +109,6 @@ public class Connections {
 
     private final int size;
     private Map<String, Connection> connections = new HashMap<>();
-    private Map<String, Bid> bidHistory = new HashMap<>();
 
     public Connections(int size) {
         this.size = size;
@@ -152,8 +151,23 @@ public class Connections {
 
     public Connections remove(@NonNull Path path) {
         remove(path.A(), path);
-        remove(path.B(), path);
+        //remove(path.B(), path);
         return this;
+    }
+
+    public boolean hasPath(@NonNull Path path) {
+        Point a = path.A();
+        if (connections.containsKey(a.hashKey())) {
+            Connection c = connections.get(a.hashKey());
+            if (c.connections != null) {
+                if (c.connections[0] != null && c.connections[0].equals(path)) {
+                    return true;
+                } else if (c.connections[1] != null && c.connections[1].equals(path)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public void remove(Point p, Path path) throws IllegalArgumentException {

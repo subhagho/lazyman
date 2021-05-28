@@ -68,6 +68,7 @@ public class Runner {
             Connections snapshot = null;
             short iCount = 0;
             while (true) {
+                reader.cache().resetRings();
                 lastPrintCount = run(reader, snapshot, iteration, lastPrintCount, st);
                 if (connections.reachedClosure()) {
                     break;
@@ -76,7 +77,20 @@ public class Runner {
                     if (snapshot.isIdentical(connections)) {
                         if (iCount > 3)
                             break;
-                        else iCount++;
+                        else {
+                            /*
+                            List<Ring> rings = null;
+                            if (hasLocalEquilibrium()) {
+                                LogUtils.info(getClass(), "Local equilibrium detected...");
+                                rings = detectRings();
+                                RingProcessor rp = new RingProcessor();
+                                rp.process(rings, reader.cache(), connections);
+                            }
+
+                             */
+
+                            iCount++;
+                        }
                     } else {
                         iCount = 0;
                     }

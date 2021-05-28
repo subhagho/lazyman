@@ -14,6 +14,8 @@ import java.util.Objects;
 @Accessors(fluent = true)
 @ToString
 public class Path implements BytesMarshallable, Comparable<Path> {
+    public static final double G = 9.8f;
+    public static final double MU = 0.2f;
     @Setter(AccessLevel.NONE)
     private Point A;
     @Setter(AccessLevel.NONE)
@@ -21,6 +23,7 @@ public class Path implements BytesMarshallable, Comparable<Path> {
     private double elevation = 0;
     private double length;
     private final double actualLength;
+    private boolean usable = true;
 
     public Path(@NonNull Point A, @NonNull Point B, double length) {
         this.A = A;
@@ -41,18 +44,24 @@ public class Path implements BytesMarshallable, Comparable<Path> {
 
     public double distance() {
         if (A != null && B != null) {
+            double d = 0;
+            double h = 0;
             if (elevation == 0) {
-                double h = A.elevation() - B.elevation();
-                return Math.sqrt(Math.pow(length, 2) + Math.pow(h, 2));
+                h = A.elevation() - B.elevation();
+                d = Math.sqrt(Math.pow(length, 2) + Math.pow(h, 2));
             } else {
                 double h1 = elevation - A.elevation();
                 double d1 = Math.sqrt(Math.pow(length / 2f, 2) + Math.pow(h1, 2));
                 double h2 = elevation - B.elevation();
                 double d2 = Math.sqrt(Math.pow(length / 2f, 2) + Math.pow(h2, 2));
-                return d1 + d2;
+                d = d1 + d2;
+                h = Math.max(h1, h2);
+            }
+            if (d > 0) {
+                return d;
             }
         }
-        return -1;
+        return Double.MAX_VALUE;
     }
 
     public double elevation() {
@@ -77,6 +86,12 @@ public class Path implements BytesMarshallable, Comparable<Path> {
         } else if (B.sequence() == source) {
             return A;
         }
+        return null;
+    }
+
+    public Point connectingPoint(@NonNull Path path) {
+        if (hasPoint(path.A)) return path.A;
+        else if (hasPoint(path.B)) return path.B;
         return null;
     }
 

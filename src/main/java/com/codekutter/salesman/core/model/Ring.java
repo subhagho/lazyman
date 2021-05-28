@@ -18,6 +18,7 @@ public class Ring {
     private boolean isClosed = true;
     private short level = 0;
     private Ring enclosing = null;
+    private Ring connected = null;
 
     public Ring(short number) {
         this.number = number;
@@ -75,7 +76,7 @@ public class Ring {
                 throw new RuntimeException("Ring is marked as closed, but isn't closed...");
             }
         } else {
-            if (s.hasPoint(e.A()) || s.hasPoint(e.B())) {
+            if (paths.size() > 2 && (s.hasPoint(e.A()) || s.hasPoint(e.B()))) {
                 throw new RuntimeException("Ring is marked as open, but is closed...");
             }
         }

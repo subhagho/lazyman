@@ -42,7 +42,13 @@ public class TSPDataMap implements Closeable {
 
     public Path get(int ii, int index) {
         if (cache.containsKey(ii)) {
-            return cache.get(ii)[index];
+            Path[] paths = cache.get(ii);
+            for (Path p : paths) {
+                Point t = p.getTarget(ii);
+                if (t.sequence() == index) {
+                    return p;
+                }
+            }
         }
         return null;
     }
@@ -89,15 +95,7 @@ public class TSPDataMap implements Closeable {
         Path[] paths = get(s1);
         Path p = find(paths, s2);
         if (p != null) {
-            if (negate) {
-                if (p.length() >= 0) {
-                    p.length(-1f * p.length());
-                }
-            } else {
-                if (p.length() < 0) {
-                    p.length(-1f * p.length());
-                }
-            }
+            p.usable(!negate);
         }
     }
 
@@ -114,6 +112,14 @@ public class TSPDataMap implements Closeable {
             }
         }
         return -1;
+    }
+
+    public void resetRings() {
+        for (Point point : points) {
+            if (point != null) {
+                point.ring((short) -1);
+            }
+        }
     }
 
     public double getLength(int s1, int s2) {

@@ -4,6 +4,7 @@ import com.codekutter.salesman.core.model.Connections;
 import com.codekutter.salesman.core.model.Path;
 import com.codekutter.salesman.core.model.Point;
 import com.codekutter.salesman.core.model.Ring;
+import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -18,12 +19,14 @@ public class RingProcessor {
     @Getter
     @Setter
     @Accessors(fluent = true)
-    private class Connect {
+    private static class Connect {
+        Ring source;
+        Ring target;
         Path p1;
         Path p2;
         Path sourcePath;
         Path targetPath;
-        double delta;
+        double delta = Double.MAX_VALUE;
 
         public double getOpenDelta() {
             double d = 0;
@@ -38,24 +41,24 @@ public class RingProcessor {
         }
     }
 
-    public void process(@NonNull List<Ring> rings, @NonNull String name,
-                        TSPDataMap source, Connections connections) {
-        markConnections(connections, source);
+    public void process(@NonNull List<Ring> rings,
+                        @NonNull TSPDataMap data, @NonNull Connections connections) {
+        markConnections(connections, data);
         List<Ring> openRings = new ArrayList<>();
         for (Ring ring : rings) {
             if (!ring.isClosed()) {
-                markOpenRingConnections(ring, source);
+                markOpenRingConnections(ring, data);
                 openRings.add(ring);
             }
-            markRingConnections(ring, rings, openRings, source, connections);
+            markRingConnections(ring, rings, openRings, data, connections);
         }
     }
 
     private void markRingConnections(Ring ring, List<Ring> rings, List<Ring> openRings,
-                                     TSPDataMap source, Connections connections) {
+                                     TSPDataMap data, Connections connections) {
         Map<String, List<Connect>> connects = new HashMap<>();
         if (ring.isClosed()) {
-            Connect c = connectClosedToOpenRings(ring, openRings, source);
+            Connect c = connectClosedToOpenRings(ring, openRings, data);
             if (c != null) {
                 addConnect(connects, c);
             }
@@ -64,18 +67,18 @@ public class RingProcessor {
             if (!canConnect(ring, ir)) continue;
             Connect c = null;
             if (ring.isClosed() && ir.isClosed()) {
-                c = connectClosedRings(ring, ir, source);
+                c = connectClosedRings(ring, ir, data);
                 if (c != null) {
                     addConnect(connects, c);
                 }
             } else if (!ring.isClosed() && !ir.isClosed()) {
-                c = connectOpenRings(ring, ir, source);
+                c = connectOpenRings(ring, ir, data);
                 if (c != null) {
                     addConnect(connects, c);
                 }
             } else {
                 if (!ring.isClosed()) {
-                    c = connectOpenToClosedRings(ring, ir, source);
+                    c = connectOpenToClosedRings(ring, ir, data);
                     if (c != null) {
                         addConnect(connects, c);
                     }
@@ -84,14 +87,15 @@ public class RingProcessor {
         }
         if (!connects.isEmpty()) {
             if (ring.isClosed()) {
-                resolveClosedConnect(ring, connects, connections);
+                resolveClosedConnect(ring, connects, data, connections);
             } else {
-                resolveOpenConnect(ring, connects, connections);
+                resolveOpenConnect(ring, connects, data, connections);
             }
         }
     }
 
-    private void resolveClosedConnect(Ring ring, Map<String, List<Connect>> connects, Connections connections) {
+    private void resolveClosedConnect(Ring ring, Map<String, List<Connect>> connects,
+                                      TSPDataMap data, Connections connections) {
         Connect connect = null;
         double delta = Double.MAX_VALUE;
         for (String key : connects.keySet()) {
@@ -104,13 +108,108 @@ public class RingProcessor {
                         delta = d;
                     }
                 } else {
-
+                    Path p1 = null;
+                    Path p2 = null;
+                    Ring target = null;
+                    Path targetPath = null;
+                    for (Connect c : cs) {
+                        int sc = 0;
+                        if (p1 == null || c.p1.distance() < p1.distance()) {
+                            p1 = c.p1;
+                            sc++;
+                        }
+                        if (p2 == null || c.p2.distance() < p2.distance()) {
+                            p2 = c.p2;
+                            sc++;
+                        }
+                        if (sc == 2 && c.source.isClosed() && (c.target != null && c.target.isClosed())) {
+                            target = c.target;
+                            targetPath = c.targetPath;
+                        } else if (sc > 0) {
+                            target = null;
+                            targetPath = null;
+                        }
+                    }
+                    Connect nc = new Connect();
+                    nc.sourcePath = cs.get(0).sourcePath;
+                    nc.targetPath = targetPath;
+                    nc.target = target;
+                    nc.source = ring;
+                    nc.p1 = p1;
+                    nc.p2 = p2;
+                    if (delta > nc.getOpenDelta()) {
+                        connect = nc;
+                    }
                 }
+            }
+        }
+        if (connect != null) {
+            connections.remove(connect.sourcePath);
+            delta = connect.getOpenDelta();
+            boolean done = false;
+            if (connect.source.isClosed() && connect.target != null) {
+                delta -= connect.targetPath.distance();
+                if (delta <= 0) {
+                    if (connections.hasPath(connect.targetPath))
+                        connections.remove(connect.targetPath);
+                    connections.add(connect.p1);
+                    connections.add(connect.p2);
+                    done = true;
+                }
+            }
+            if (!done) {
+                Point tp1 = null;
+                Point tp2 = null;
+                Point sp1 = connect.p1.connectingPoint(connect.sourcePath);
+                if (sp1 == null) {
+                    throw new RuntimeException(String.format("No connection found. [source=%s][target=%s]",
+                            connect.sourcePath.toString(), connect.p1.toString()));
+                }
+                tp1 = connect.p1.getTarget(sp1);
+                Preconditions.checkNotNull(tp1);
+                Point sp2 = connect.p2.connectingPoint(connect.sourcePath);
+                if (sp2 == null) {
+                    throw new RuntimeException(String.format("No connection found. [source=%s][target=%s]",
+                            connect.sourcePath.toString(), connect.p2.toString()));
+                }
+                tp2 = connect.p2.getTarget(sp2);
+                Preconditions.checkNotNull(tp2);
+                double r1 = connect(sp1, tp1, data);
+                double r2 = connect(sp2, tp2, data);
+                double r = Math.max(r1, r2);
+                double h = Math.max(sp1.elevation(), sp2.elevation());
+                double hn = Math.sqrt(Math.pow(r / 2f, 2) - Math.pow(connect.sourcePath.length() / 2f, 2));
+                connect.sourcePath.elevation(h + hn);
             }
         }
     }
 
-    private void resolveOpenConnect(Ring ring, Map<String, List<Connect>> connects, Connections connections) {
+    private double connect(Point sp, Point tp, TSPDataMap data) {
+        double dist = data.getDistance(sp.sequence(), tp.sequence());
+        Path[] paths = data.get(tp.sequence());
+        double md = Double.MAX_VALUE;
+        for (Path p : paths) {
+            if (p != null && p.distance() < md) {
+                md = p.distance();
+            }
+        }
+        double ht = Math.sqrt(Math.pow(dist, 2) - Math.pow(md, 2));
+        tp.elevation(ht + tp.elevation());
+
+        paths = data.get(sp.sequence());
+        md = Double.MAX_VALUE;
+        for (Path p : paths) {
+            if (p != null && p.distance() < md) {
+                md = p.distance();
+            }
+        }
+        double hs = Math.sqrt(Math.pow(dist, 2) - Math.pow(md, 2));
+        sp.elevation(sp.elevation() + Math.max(hs, ht));
+        return dist;
+    }
+
+    private void resolveOpenConnect(Ring ring, Map<String, List<Connect>> connects,
+                                    TSPDataMap data, Connections connections) {
 
     }
 
@@ -165,8 +264,10 @@ public class RingProcessor {
             }
         }
         if (minpaths != null) {
-            data.togglePath(minpaths.p1.A().sequence(), minpaths.p1.B().sequence(), true);
-            data.togglePath(minpaths.p2.A().sequence(), minpaths.p2.B().sequence(), true);
+            data.togglePath(minpaths.p1.A().sequence(), minpaths.p1.B().sequence(), false);
+            data.togglePath(minpaths.p2.A().sequence(), minpaths.p2.B().sequence(), false);
+            minpaths.source = source;
+            minpaths.target = target;
         }
         return minpaths;
     }
@@ -188,6 +289,9 @@ public class RingProcessor {
                     }
                 }
             }
+        }
+        if (minpaths != null) {
+            minpaths.source = source;
         }
         return minpaths;
     }
@@ -269,7 +373,13 @@ public class RingProcessor {
         Point b1 = p1.B();
         Point b2 = p2.B();
         Path pa = data.get(a1.sequence(), a2.sequence());
+        if (pa == null) {
+            throw new RuntimeException(String.format("Path not found. [A=%s][B=%s]", a1, a2));
+        }
         Path pb = data.get(b1.sequence(), b2.sequence());
+        if (pb == null) {
+            throw new RuntimeException(String.format("Path not found. [A=%s][B=%s]", b1, b2));
+        }
         paths[0] = pa;
         paths[1] = pb;
         d1 = pa.distance() + pb.distance();
