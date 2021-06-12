@@ -10,16 +10,13 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RingProcessor {
     @Getter
     @Setter
     @Accessors(fluent = true)
-    private static class Connect {
+    public static class Connect {
         Ring source;
         Ring target;
         Path p1;
@@ -41,6 +38,73 @@ public class RingProcessor {
         }
     }
 
+    public static class ConnectSorter implements Comparator<Connect> {
+
+        /**
+         * Compares its two arguments for order.  Returns a negative integer,
+         * zero, or a positive integer as the first argument is less than, equal
+         * to, or greater than the second.<p>
+         * <p>
+         * The implementor must ensure that {@code sgn(compare(x, y)) ==
+         * -sgn(compare(y, x))} for all {@code x} and {@code y}.  (This
+         * implies that {@code compare(x, y)} must throw an exception if and only
+         * if {@code compare(y, x)} throws an exception.)<p>
+         * <p>
+         * The implementor must also ensure that the relation is transitive:
+         * {@code ((compare(x, y)>0) && (compare(y, z)>0))} implies
+         * {@code compare(x, z)>0}.<p>
+         * <p>
+         * Finally, the implementor must ensure that {@code compare(x, y)==0}
+         * implies that {@code sgn(compare(x, z))==sgn(compare(y, z))} for all
+         * {@code z}.<p>
+         * <p>
+         * It is generally the case, but <i>not</i> strictly required that
+         * {@code (compare(x, y)==0) == (x.equals(y))}.  Generally speaking,
+         * any comparator that violates this condition should clearly indicate
+         * this fact.  The recommended language is "Note: this comparator
+         * imposes orderings that are inconsistent with equals."<p>
+         * <p>
+         * In the foregoing description, the notation
+         * {@code sgn(}<i>expression</i>{@code )} designates the mathematical
+         * <i>signum</i> function, which is defined to return one of {@code -1},
+         * {@code 0}, or {@code 1} according to whether the value of
+         * <i>expression</i> is negative, zero, or positive, respectively.
+         *
+         * @param o1 the first object to be compared.
+         * @param o2 the second object to be compared.
+         * @return a negative integer, zero, or a positive integer as the
+         * first argument is less than, equal to, or greater than the
+         * second.
+         * @throws NullPointerException if an argument is null and this
+         *                              comparator does not permit null arguments
+         * @throws ClassCastException   if the arguments' types prevent them from
+         *                              being compared by this comparator.
+         */
+        @Override
+        public int compare(Connect o1, Connect o2) {
+            int ret = 0;
+            if (o1 == null && o2 == null) {
+                ret = 0;
+            } else if (o1 == null) {
+                ret = 1;
+            } else if (o1 == null) {
+                ret = -1;
+            } else {
+                double d = o1.delta - o2.delta;
+                if (d > 0) {
+                    ret = (int) Math.ceil(d);
+                } else if (d < 0) {
+                    ret = (int) Math.floor(d);
+                } else {
+                    ret = 0;
+                }
+            }
+            return ret;
+        }
+    }
+
+    private Map<Integer, List<Integer>> connectedRings = new HashMap<>();
+
     public void process(@NonNull List<Ring> rings,
                         @NonNull TSPDataMap data, @NonNull Connections connections) {
         markConnections(connections, data);
@@ -50,23 +114,21 @@ public class RingProcessor {
                 markOpenRingConnections(ring, data);
                 openRings.add(ring);
             }
-            markRingConnections(ring, rings, openRings, data, connections);
+            markRingConnections(ring, rings, data, connections);
         }
     }
 
-    private void markRingConnections(Ring ring, List<Ring> rings, List<Ring> openRings,
+    private void addConnectedRing(Ring source, Ring target) {
+
+    }
+
+    private void markRingConnections(Ring ring, List<Ring> rings,
                                      TSPDataMap data, Connections connections) {
         Map<String, List<Connect>> connects = new HashMap<>();
-        if (ring.isClosed()) {
-            Connect c = connectClosedToOpenRings(ring, openRings, data);
-            if (c != null) {
-                addConnect(connects, c);
-            }
-        }
         for (Ring ir : rings) {
             if (!canConnect(ring, ir)) continue;
-            Connect c = null;
-            if (ring.isClosed() && ir.isClosed()) {
+            List<Connect> c = null;
+            if (ring.isClosed()) {
                 c = connectClosedRings(ring, ir, data);
                 if (c != null) {
                     addConnect(connects, c);
@@ -221,6 +283,12 @@ public class RingProcessor {
         connects.get(key).add(connect);
     }
 
+    private void addConnect(Map<String, List<Connect>> connects, List<Connect> connect) {
+        for (Connect c : connect) {
+            addConnect(connects, c);
+        }
+    }
+
     private boolean canConnect(Ring source, Ring target) {
         if (source.number() == target.number()) return false;
         Ring ps = source.enclosing();
@@ -239,9 +307,8 @@ public class RingProcessor {
         return true;
     }
 
-    private Connect connectClosedRings(Ring source, Ring target, TSPDataMap data) {
-        double mindist = Double.MAX_VALUE;
-        Connect minpaths = null;
+    private List<Connect> connectClosedRings(Ring source, Ring target, TSPDataMap data) {
+        List<Connect> connects = new ArrayList<>();
         for (int ii = 0; ii < source.paths().size(); ii++) {
             double ds = source.paths().get(ii).distance();
             for (int jj = 0; jj < target.paths().size(); jj++) {
@@ -249,27 +316,22 @@ public class RingProcessor {
                 Path[] paths = findMinPaths(source.paths().get(ii), target.paths().get(jj), data);
                 if (paths != null && paths[0] != null && paths[1] != null) {
                     double delta = (paths[0].distance() + paths[1].distance()) - (ds + dt);
-                    if (delta < mindist) {
-                        mindist = delta;
-                        if (minpaths == null) {
-                            minpaths = new Connect();
-                        }
-                        minpaths.p1 = paths[0];
-                        minpaths.p2 = paths[1];
-                        minpaths.sourcePath = source.paths().get(ii);
-                        minpaths.targetPath = target.paths().get(jj);
-                        minpaths.delta = delta;
-                    }
+                    Connect connect = new Connect();
+                    connect.p1 = paths[0];
+                    connect.p2 = paths[1];
+                    connect.sourcePath = source.paths().get(ii);
+                    connect.targetPath = target.paths().get(jj);
+                    connect.delta = delta;
+                    connect.source = source;
+                    connect.target = target;
+                    connects.add(connect);
+
+                    data.togglePath(paths[0].A().sequence(), paths[0].B().sequence(), false);
+                    data.togglePath(paths[1].A().sequence(), paths[1].B().sequence(), false);
                 }
             }
         }
-        if (minpaths != null) {
-            data.togglePath(minpaths.p1.A().sequence(), minpaths.p1.B().sequence(), false);
-            data.togglePath(minpaths.p2.A().sequence(), minpaths.p2.B().sequence(), false);
-            minpaths.source = source;
-            minpaths.target = target;
-        }
-        return minpaths;
+        return connects;
     }
 
     private Connect connectClosedToOpenRings(Ring source, List<Ring> openRings, TSPDataMap data) {
@@ -320,8 +382,8 @@ public class RingProcessor {
                 }
             }
         }
-        data.togglePath(c.p1.A().sequence(), c.p1.B().sequence(), true);
-        data.togglePath(c.p2.A().sequence(), c.p2.B().sequence(), true);
+        data.togglePath(c.p1.A().sequence(), c.p1.B().sequence(), false);
+        data.togglePath(c.p2.A().sequence(), c.p2.B().sequence(), false);
         return c;
     }
 
@@ -357,11 +419,11 @@ public class RingProcessor {
         return paths;
     }
 
-    private Connect connectOpenRings(Ring source, Ring target, TSPDataMap data) {
+    private List<Connect> connectOpenRings(Ring source, Ring target, TSPDataMap data) {
         return null;
     }
 
-    private Connect connectOpenToClosedRings(Ring source, Ring target, TSPDataMap data) {
+    private List<Connect> connectOpenToClosedRings(Ring source, Ring target, TSPDataMap data) {
         return null;
     }
 
@@ -406,10 +468,10 @@ public class RingProcessor {
                 if (po.equals(pi)) continue;
                 Point pia = pi.A();
                 Point pib = pi.B();
-                source.togglePath(poa.sequence(), pia.sequence(), false);
-                source.togglePath(poa.sequence(), pib.sequence(), false);
-                source.togglePath(pob.sequence(), pib.sequence(), false);
-                source.togglePath(pob.sequence(), pia.sequence(), false);
+                source.togglePath(poa.sequence(), pia.sequence(), true);
+                source.togglePath(poa.sequence(), pib.sequence(), true);
+                source.togglePath(pob.sequence(), pib.sequence(), true);
+                source.togglePath(pob.sequence(), pia.sequence(), true);
             }
         }
     }
@@ -424,13 +486,9 @@ public class RingProcessor {
                     for (Path path : paths) {
                         if (path != null) {
                             if (p.equals(path)) {
-                                if (path.length() < 0) {
-                                    path.length(1f * path.length());
-                                }
+                                path.usable(true);
                             } else {
-                                if (path.length() > 0) {
-                                    path.length(-1f * path.length());
-                                }
+                                path.usable(false);
                             }
                         }
                     }

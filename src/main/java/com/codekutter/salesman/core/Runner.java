@@ -4,10 +4,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.codekutter.salesman.common.Config;
 import com.codekutter.salesman.common.LogUtils;
-import com.codekutter.salesman.core.model.Connections;
-import com.codekutter.salesman.core.model.Path;
-import com.codekutter.salesman.core.model.Point;
-import com.codekutter.salesman.core.model.Ring;
+import com.codekutter.salesman.core.model.*;
 import com.codekutter.salesman.ui.Helper;
 import com.codekutter.salesman.ui.Viewer;
 import com.google.common.base.Preconditions;
@@ -78,7 +75,6 @@ public class Runner {
                         if (iCount > 3)
                             break;
                         else {
-                            /*
                             List<Ring> rings = null;
                             if (hasLocalEquilibrium()) {
                                 LogUtils.info(getClass(), "Local equilibrium detected...");
@@ -86,8 +82,6 @@ public class Runner {
                                 RingProcessor rp = new RingProcessor();
                                 rp.process(rings, reader.cache(), connections);
                             }
-
-                             */
 
                             iCount++;
                         }
@@ -204,7 +198,7 @@ public class Runner {
             path = connection.connections()[1];
         }
         check.put(prevp.sequence(), prevp);
-        while (true) {
+        while (path != null) {
             Point target = path.getTarget(prevp);
             if (check.containsKey(target.sequence())) {
                 break;
@@ -221,9 +215,7 @@ public class Runner {
             }
             check.put(target.sequence(), target);
             prevp = target;
-            if (path == null) {
-                break;
-            }
+
         }
         if (check.size() != reader.cache().size()) {
             LogUtils.info(getClass(), String.format("Expected Size = %d, Loop Size = %d", reader.cache().size(), check.size()));
@@ -272,7 +264,7 @@ public class Runner {
                 path = null;
             }
             if (path == null) {
-                r.isClosed(false);
+                r = new OpenRing(r);
                 if (both) {
                     path = patho;
                     prevp = start;
@@ -283,6 +275,9 @@ public class Runner {
             }
             prevp = target;
             r.add(path);
+        }
+        if (!(r instanceof OpenRing)) {
+            r = new ClosedRing(r);
         }
         r.validate();
         return r;

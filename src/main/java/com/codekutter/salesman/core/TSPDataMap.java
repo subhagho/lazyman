@@ -133,6 +133,39 @@ public class TSPDataMap implements Closeable {
         return -1;
     }
 
+    public Path[] findMinPaths(Path p1, Path p2) {
+        Path[] paths = new Path[2];
+        double d1 = 0, d2 = 0;
+        Point a1 = p1.A();
+        Point a2 = p2.A();
+        Point b1 = p1.B();
+        Point b2 = p2.B();
+        Path pa = get(a1.sequence(), a2.sequence());
+        if (pa == null) {
+            throw new RuntimeException(String.format("Path not found. [A=%s][B=%s]", a1, a2));
+        }
+        Path pb = get(b1.sequence(), b2.sequence());
+        if (pb == null) {
+            throw new RuntimeException(String.format("Path not found. [A=%s][B=%s]", b1, b2));
+        }
+        paths[0] = pa;
+        paths[1] = pb;
+        d1 = pa.distance() + pb.distance();
+
+        a1 = p1.A();
+        a2 = p2.B();
+        b1 = p1.B();
+        b2 = p2.A();
+        pa = get(a1.sequence(), a2.sequence());
+        pb = get(b1.sequence(), b2.sequence());
+        d2 = pa.distance() + pb.distance();
+        if (d2 < d1) {
+            paths[0] = pa;
+            paths[1] = pb;
+        }
+        return paths;
+    }
+
     private Path find(Path[] paths, int sequence) {
         for (Path p : paths) {
             if (p.A().sequence() == sequence || p.B().sequence() == sequence) return p;
