@@ -20,16 +20,28 @@ public class Connections {
     @Getter
     @Setter
     @Accessors(fluent = true)
+    public static class ConnectionPath {
+        private Path path;
+        private boolean biddable = true;
+    }
+
+    @Getter
+    @Setter
+    @Accessors(fluent = true)
     @ToString
     public static class Connection {
         private final Point point;
-        private Path[] connections = new Path[2];
+        private ConnectionPath[] connections = new ConnectionPath[2];
 
         public Connection(@NonNull Point point) {
             this.point = point;
         }
 
         public int add(@NonNull Path path) {
+            return add(path, true);
+        }
+
+        public int add(@NonNull Path path, boolean biddable) {
             Preconditions.checkArgument(isValidPath(path));
             int idx = -1;
             if (connections[0] == null) {
@@ -40,24 +52,30 @@ public class Connections {
             if (idx < 0) {
                 throw new ArrayIndexOutOfBoundsException(String.format("No empty connection index found. [connection=%s]", toString()));
             }
-            connections[idx] = path;
+            ConnectionPath cp = new ConnectionPath();
+            cp.path = path;
+            cp.biddable = biddable;
+            connections[idx] = cp;
             return idx;
         }
 
-        public Connection add(@NonNull Path path, int index) {
+        public Connection add(@NonNull Path path, int index, boolean biddable) {
             Preconditions.checkArgument(isValidPath(path));
             Preconditions.checkArgument(connections[index] == null);
-            connections[index] = path;
+            ConnectionPath cp = new ConnectionPath();
+            cp.path = path;
+            cp.biddable = biddable;
+            connections[index] = cp;
             return this;
         }
 
         public int remove(@NonNull Path path) {
             Preconditions.checkArgument(isValidPath(path));
             int idx = -1;
-            if (connections[0] != null && connections[0].equals(path)) {
+            if (connections[0] != null && connections[0].path.equals(path)) {
                 connections[0] = null;
                 idx = 0;
-            } else if (connections[1] != null && connections[1].equals(path)) {
+            } else if (connections[1] != null && connections[1].path.equals(path)) {
                 connections[1] = null;
                 idx = 1;
             }
@@ -82,8 +100,8 @@ public class Connections {
             if (sequence != point.sequence()) {
                 for (int ii = 0; ii < connections.length; ii++) {
                     if (connections[ii] != null) {
-                        if (connections[ii].A().sequence() == sequence || connections[ii].B().sequence() == sequence) {
-                            return connections[ii];
+                        if (connections[ii].path.A().sequence() == sequence || connections[ii].path.B().sequence() == sequence) {
+                            return connections[ii].path;
                         }
                     }
                 }

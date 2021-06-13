@@ -481,11 +481,11 @@ public class RingProcessor {
             if (connection.connections() != null) {
                 Point point = connection.point();
                 Path[] paths = source.get(point.sequence());
-                for (Path p : connection.connections()) {
+                for (Connections.ConnectionPath p : connection.connections()) {
                     if (p == null) continue;
                     for (Path path : paths) {
                         if (path != null) {
-                            if (p.equals(path)) {
+                            if (p.path().equals(path)) {
                                 path.usable(true);
                             } else {
                                 path.usable(false);

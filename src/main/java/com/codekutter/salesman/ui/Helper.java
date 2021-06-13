@@ -61,9 +61,9 @@ public class Helper {
                 Helper.maxY = point.Y();
             }
             getVertex(point, view, points);
-            for (Path path : connection.connections()) {
+            for (Connections.ConnectionPath path : connection.connections()) {
                 if (path != null) {
-                    addPath(path, view, paths, points);
+                    addPath(path.path(), view, paths, points);
                 }
             }
         }

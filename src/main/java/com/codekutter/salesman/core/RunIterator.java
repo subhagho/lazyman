@@ -44,6 +44,7 @@ public class RunIterator {
         }
     }
 
+    /*
     public void checkOptimal(@NonNull Point point, int index) {
         Connections.Connection connection = connections.get(point, true);
         if (!connection.isComplete()) return;
@@ -72,6 +73,7 @@ public class RunIterator {
             connections.add(path);
         }
     }
+     */
 
     private double getMinDistance(Point point, Connections.Connection connection) {
         double[] dists = data.getMinDistances(point);
@@ -98,9 +100,9 @@ public class RunIterator {
         double useddist = 0;
         if (connection.connections() != null) {
             if (index == 0 && connection.connections()[1] != null) {
-                useddist = connection.connections()[1].distance();
+                useddist = connection.connections()[1].path().distance();
             } else if (connection.connections()[0] != null) {
-                useddist = connection.connections()[0].distance();
+                useddist = connection.connections()[0].path().distance();
             }
         }
         for (int ii = 0; ii < stopIndex; ii++) {
@@ -145,12 +147,12 @@ public class RunIterator {
 
     private Path findPathToReplace(Connections.Connection connection, double distance) {
         Path p = null;
-        if (connection.connections()[0].length() >= 0 && connection.connections()[0].distance() < distance) {
-            p = connection.connections()[0];
+        if (connection.connections()[0].biddable() && connection.connections()[0].path().distance() < distance) {
+            p = connection.connections()[0].path();
         }
-        if (connection.connections()[1].length() >= 0 && connection.connections()[1].distance() < distance) {
-            if (p != null && connection.connections()[1].distance() > p.distance()) {
-                p = connection.connections()[1];
+        if (connection.connections()[1].biddable() && connection.connections()[1].path().distance() < distance) {
+            if (p != null && connection.connections()[1].path().distance() > p.distance()) {
+                p = connection.connections()[1].path();
             }
         }
         return p;
@@ -164,9 +166,9 @@ public class RunIterator {
             return false;
         } else {
             if (connection.connections() != null) {
-                for (Path p : connection.connections()) {
+                for (Connections.ConnectionPath p : connection.connections()) {
                     if (p != null) {
-                        if (path.equals(p)) return false;
+                        if (path.equals(p.path())) return false;
                     }
                 }
             }

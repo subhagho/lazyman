@@ -193,9 +193,9 @@ public class Runner {
         Map<Integer, Point> check = new HashMap<>();
         Point prevp = reader.cache().points()[0];
         Connections.Connection connection = connections.get(prevp);
-        Path path = connection.connections()[0];
+        Path path = connection.connections()[0].path();
         if (path == null) {
-            path = connection.connections()[1];
+            path = connection.connections()[1].path();
         }
         check.put(prevp.sequence(), prevp);
         while (path != null) {
@@ -208,10 +208,10 @@ public class Runner {
                 throw new RuntimeException(String.format("Both connections are NULL. [connection=%s]", connection));
             }
             if (connection.connections()[0] != null
-                    && !connection.connections()[0].getTarget(target).equals(prevp)) {
-                path = connection.connections()[0];
+                    && !connection.connections()[0].path().getTarget(target).equals(prevp)) {
+                path = connection.connections()[0].path();
             } else if (connection.connections()[1] != null) {
-                path = connection.connections()[1];
+                path = connection.connections()[1].path();
             }
             check.put(target.sequence(), target);
             prevp = target;
@@ -231,11 +231,11 @@ public class Runner {
         Point prevp = start;
         Path patho = null;
         Connections.Connection connection = connections.get(prevp);
-        Path path = connection.connections()[0];
+        Path path = connection.connections()[0].path();
         if (path == null) {
-            path = connection.connections()[1];
+            path = connection.connections()[1].path();
         } else {
-            patho = connection.connections()[1];
+            patho = connection.connections()[1].path();
         }
         if (path == null) return null;
 
@@ -255,11 +255,11 @@ public class Runner {
             }
 
             if (connection.connections()[0] != null
-                    && !connection.connections()[0].getTarget(target).equals(prevp)) {
-                path = connection.connections()[0];
+                    && !connection.connections()[0].path().getTarget(target).equals(prevp)) {
+                path = connection.connections()[0].path();
             } else if (connection.connections()[1] != null
-                    && !connection.connections()[1].getTarget(target).equals(prevp)) {
-                path = connection.connections()[1];
+                    && !connection.connections()[1].path().getTarget(target).equals(prevp)) {
+                path = connection.connections()[1].path();
             } else {
                 path = null;
             }

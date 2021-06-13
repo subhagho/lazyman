@@ -7,9 +7,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @Getter
 @Setter
@@ -20,10 +18,45 @@ public class Ring {
     @Accessors(fluent = true)
     public static class RingRoute {
         private final short ring;
+        private final Path ends;
         private List<Path> paths = new ArrayList<>();
 
-        public RingRoute(short ring) {
+        public RingRoute(short ring, @NonNull Path ends) {
             this.ring = ring;
+            this.ends = ends;
+        }
+
+        public RingRoute(@NonNull Ring ring) {
+            this.ring = ring.number;
+            Point ps = null;
+            Point pe = null;
+            paths = ring.paths;
+            for (int ii = 0; ii < paths.size(); ii++) {
+                Path path = paths.get(ii);
+                if (ps == null) {
+                    Path pn = paths.get(ii + 1);
+                    if (!pn.hasPoint(path.A())) {
+                        ps = path.A();
+                    } else if (!pn.hasPoint(path.B())) {
+                        ps = path.B();
+                    } else {
+                        throw new RuntimeException(String.format("Invalid start path. [ring=%d]...", ring.number));
+                    }
+                } else if (ii == paths.size() - 1) {
+                    Path pp = paths.get(ii - 1);
+                    if (!pp.hasPoint(path.A())) {
+                        pe = path.A();
+                    } else if (!pp.hasPoint(path.B())) {
+                        pe = path.B();
+                    } else {
+                        throw new RuntimeException(String.format("Invalid end path. [ring=%d]...", ring.number));
+                    }
+                }
+            }
+            if (pe == null || ps == null) {
+                throw new RuntimeException(String.format("Start/End point not found. [ring=%d]...", ring.number));
+            }
+            ends = new Path(ps, pe);
         }
 
         public RingRoute addPath(@NonNull Path path) {
@@ -226,5 +259,21 @@ public class Ring {
 
     public void computeConnections(@NonNull Connections connections, @NonNull TSPDataMap data, @NonNull List<Ring> rings) {
         throw new RuntimeException("Method should not be called...");
+    }
+
+    public List<Point> getPoints() {
+        List<Point> points = new ArrayList<>();
+        Map<Integer, Point> added = new HashMap<>();
+        for (Path path : paths) {
+            if (!added.containsKey(path.A().sequence())) {
+                points.add(path.A());
+                added.put(path.A().sequence(), path.A());
+            }
+            if (!added.containsKey(path.B().sequence())) {
+                points.add(path.B());
+                added.put(path.B().sequence(), path.B());
+            }
+        }
+        return points;
     }
 }
