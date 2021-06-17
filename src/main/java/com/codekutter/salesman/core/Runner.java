@@ -66,7 +66,7 @@ public class Runner {
             short iCount = 0;
             while (true) {
                 reader.cache().resetRings();
-                lastPrintCount = run(reader, snapshot, iteration, lastPrintCount, st);
+                lastPrintCount = run(reader, iteration, lastPrintCount, st);
                 if (connections.reachedClosure()) {
                     break;
                 }
@@ -112,18 +112,15 @@ public class Runner {
         }
     }
 
-    private int run(TSPDataReader reader, Connections snapshot, int iteration, int lastPrintCount, long starttime) {
+    private int run(TSPDataReader reader, int iteration, int lastPrintCount, long starttime) {
         long st = System.currentTimeMillis();
         for (int ii = 0; ii < reader.getNodeCount(); ii++) {
             Point p = reader.cache().points()[ii];
-            Connections.Connection prev = null;
-            if (snapshot != null) {
-                prev = snapshot.get(p);
-            }
-            iterator.run(prev, p, ii);
+
+            iterator.run(p, ii);
         }
         if (iteration % 10000 == 0) {
-            LogUtils.info(getClass(),
+            LogUtils.debug(getClass(),
                     String.format("[%d] Completed iteration. [time=%d][elapsed=%d sec]",
                             iteration, (System.currentTimeMillis() - st), (System.currentTimeMillis() - starttime) / 1000));
         }
@@ -231,10 +228,10 @@ public class Runner {
         Point prevp = start;
         Path patho = null;
         Connections.Connection connection = connections.get(prevp);
-        Path path = connection.connections()[0].path();
-        if (path == null) {
+        Path path = (connection.connections()[0] != null ? connection.connections()[0].path() : null);
+        if (path == null && connection.connections()[1] != null) {
             path = connection.connections()[1].path();
-        } else {
+        } else if (connection.connections()[1] != null) {
             patho = connection.connections()[1].path();
         }
         if (path == null) return null;

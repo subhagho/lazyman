@@ -151,20 +151,23 @@ public class Connections {
         return this;
     }
 
-
     public Connections add(@NonNull Path path) {
-        add(path.A(), path);
-        add(path.B(), path);
+        return add(path, true);
+    }
+
+    public Connections add(@NonNull Path path, boolean biddable) {
+        add(path.A(), path, biddable);
+        add(path.B(), path, biddable);
         return this;
     }
 
-    private void add(Point p, Path path) throws ArrayIndexOutOfBoundsException {
+    private void add(Point p, Path path, boolean biddable) throws ArrayIndexOutOfBoundsException {
         Connection pa = connections.get(p.hashKey());
         if (pa == null) {
             pa = new Connection(p);
             connections.put(p.hashKey(), pa);
         }
-        pa.add(path);
+        pa.add(path, biddable);
     }
 
     public Connections remove(@NonNull Path path) {
@@ -178,9 +181,9 @@ public class Connections {
         if (connections.containsKey(a.hashKey())) {
             Connection c = connections.get(a.hashKey());
             if (c.connections != null) {
-                if (c.connections[0] != null && c.connections[0].equals(path)) {
+                if (c.connections[0] != null && c.connections[0].path.equals(path)) {
                     return true;
-                } else if (c.connections[1] != null && c.connections[1].equals(path)) {
+                } else if (c.connections[1] != null && c.connections[1].path.equals(path)) {
                     return true;
                 }
             }

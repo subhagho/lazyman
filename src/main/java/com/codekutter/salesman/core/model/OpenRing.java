@@ -1,5 +1,6 @@
 package com.codekutter.salesman.core.model;
 
+import com.codekutter.salesman.core.RunIterator;
 import com.codekutter.salesman.core.TSPDataMap;
 import lombok.NonNull;
 
@@ -32,7 +33,7 @@ public class OpenRing extends Ring {
                 if (sp.sequence() == tp.sequence()) continue;
                 Path path = new Path(sp, tp);
                 if (routes.containsKey(path.pathKey())) continue;
-                RingRoute rr = computeRoute(path, data);
+                RingRoute rr = computeRoute(path, points, data);
                 if (rr != null) {
                     routes.put(rr.ends().pathKey(), rr);
                 }
@@ -40,9 +41,65 @@ public class OpenRing extends Ring {
         }
     }
 
-    private RingRoute computeRoute(Path path, TSPDataMap data) {
+    private RingRoute computeRoute(Path path, List<Point> points, TSPDataMap data) {
         RingRoute rr = new RingRoute(number(), path);
+        Connections connections = new Connections(points.size());
+        connections.add(path, false);
+        RunIterator iterator = new RunIterator(data, connections);
+        Connections snapshot = null;
 
-        return rr;
+        while (true) {
+            for (int ii = 0; ii < points.size(); ii++) {
+                iterator.run(points.get(ii), ii);
+            }
+            if (connections.reachedClosure()) {
+                break;
+            }
+            if (snapshot != null) {
+                if (snapshot.isIdentical(connections)) {
+                    break;
+                }
+            }
+            snapshot = connections.copy();
+        }
+        return computeRoute(connections, path, points, rr);
+    }
+
+    private RingRoute computeRoute(Connections connections, Path path, List<Point> points, RingRoute route) {
+        Map<String, Path> passed = new HashMap<>();
+        Path cp = null;
+        Point lp = path.A();
+        Connections.Connection cs = connections.get(path.A());
+        if (cs != null) {
+            if (cs.connections()[0] != null && cs.connections()[0].path().equals(path)) {
+                cp = (cs.connections()[1] != null ? cs.connections()[1].path() : null);
+            } else if (cs.connections()[1] != null && cs.connections()[1].path().equals(path)) {
+                cp = (cs.connections()[0] != null ? cs.connections()[0].path() : null);
+            }
+        }
+        passed.put(lp.key(), cp);
+        while (cp != null) {
+            Point np = cp.getTarget(lp);
+            if (passed.containsKey(np.key())) {
+                break;
+            }
+            cs = connections.get(np);
+            if (cs != null) {
+                if (cs.connections()[0] != null && cs.connections()[0].path().equals(cp)) {
+                    cp = (cs.connections()[1] != null ? cs.connections()[1].path() : null);
+                } else if (cs.connections()[1] != null && cs.connections()[1].path().equals(cp)) {
+                    cp = (cs.connections()[0] != null ? cs.connections()[0].path() : null);
+                }
+            }
+            if (cp != null) {
+                passed.put(np.key(), cp);
+                lp = np;
+                route.paths().add(cp);
+            }
+        }
+        if (passed.size() == points.size()) {
+            return route;
+        }
+        return null;
     }
 }

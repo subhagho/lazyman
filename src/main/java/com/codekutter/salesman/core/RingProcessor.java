@@ -1,5 +1,6 @@
 package com.codekutter.salesman.core;
 
+import com.codekutter.salesman.common.LogUtils;
 import com.codekutter.salesman.core.model.Connections;
 import com.codekutter.salesman.core.model.Path;
 import com.codekutter.salesman.core.model.Point;
@@ -34,6 +35,15 @@ public class RingProcessor {
                 d += p2.distance();
             }
             d -= sourcePath.distance();
+            return d;
+        }
+
+        public double computeDistance() {
+            double d = 0;
+            d += p1.distance();
+            d += p2.distance();
+            d -= sourcePath.distance();
+            d -= targetPath.distance();
             return d;
         }
     }
@@ -85,12 +95,12 @@ public class RingProcessor {
             int ret = 0;
             if (o1 == null && o2 == null) {
                 ret = 0;
-            } else if (o1 == null) {
+            } else if (o2 == null) {
                 ret = 1;
             } else if (o1 == null) {
                 ret = -1;
             } else {
-                double d = o1.delta - o2.delta;
+                double d = o1.computeDistance() - o2.computeDistance();
                 if (d > 0) {
                     ret = (int) Math.ceil(d);
                 } else if (d < 0) {
@@ -114,7 +124,9 @@ public class RingProcessor {
                 markOpenRingConnections(ring, data);
                 openRings.add(ring);
             }
-            markRingConnections(ring, rings, data, connections);
+            ring.computeConnections(connections, data, rings);
+            LogUtils.debug(getClass(), String.format("Computed connections : [ring=%d]", ring.number()));
+            //markRingConnections(ring, rings, data, connections);
         }
     }
 
@@ -468,10 +480,10 @@ public class RingProcessor {
                 if (po.equals(pi)) continue;
                 Point pia = pi.A();
                 Point pib = pi.B();
-                source.togglePath(poa.sequence(), pia.sequence(), true);
-                source.togglePath(poa.sequence(), pib.sequence(), true);
-                source.togglePath(pob.sequence(), pib.sequence(), true);
-                source.togglePath(pob.sequence(), pia.sequence(), true);
+                source.togglePath(poa.sequence(), pia.sequence(), false);
+                source.togglePath(poa.sequence(), pib.sequence(), false);
+                source.togglePath(pob.sequence(), pib.sequence(), false);
+                source.togglePath(pob.sequence(), pia.sequence(), false);
             }
         }
     }
@@ -481,16 +493,9 @@ public class RingProcessor {
             if (connection.connections() != null) {
                 Point point = connection.point();
                 Path[] paths = source.get(point.sequence());
-                for (Connections.ConnectionPath p : connection.connections()) {
-                    if (p == null) continue;
-                    for (Path path : paths) {
-                        if (path != null) {
-                            if (p.path().equals(path)) {
-                                path.usable(true);
-                            } else {
-                                path.usable(false);
-                            }
-                        }
+                for (Path path : paths) {
+                    if (path != null) {
+                        path.usable(connections.hasPath(path));
                     }
                 }
             }

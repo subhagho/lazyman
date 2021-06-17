@@ -17,7 +17,7 @@ public class RunIterator {
         this.connections = connections;
     }
 
-    public void run(Connections.Connection previous, @NonNull Point point, int index) {
+    public void run(@NonNull Point point, int index) {
         Connections.Connection connection = connections.get(point, true);
         if (connection.isComplete()) {
             return;
