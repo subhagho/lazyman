@@ -48,8 +48,8 @@ public class ClosedRing extends Ring {
                     connect.target(target);
                     connects.add(connect);
 
-                    data.togglePath(paths[0].A().sequence(), paths[0].B().sequence(), false);
-                    data.togglePath(paths[1].A().sequence(), paths[1].B().sequence(), false);
+                    data.togglePath(paths[0].A().sequence(), paths[0].B().sequence(), true);
+                    data.togglePath(paths[1].A().sequence(), paths[1].B().sequence(), true);
                 }
             }
         }

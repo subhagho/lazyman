@@ -338,8 +338,8 @@ public class RingProcessor {
                     connect.target = target;
                     connects.add(connect);
 
-                    data.togglePath(paths[0].A().sequence(), paths[0].B().sequence(), false);
-                    data.togglePath(paths[1].A().sequence(), paths[1].B().sequence(), false);
+                    data.togglePath(paths[0].A().sequence(), paths[0].B().sequence(), true);
+                    data.togglePath(paths[1].A().sequence(), paths[1].B().sequence(), true);
                 }
             }
         }
@@ -394,8 +394,8 @@ public class RingProcessor {
                 }
             }
         }
-        data.togglePath(c.p1.A().sequence(), c.p1.B().sequence(), false);
-        data.togglePath(c.p2.A().sequence(), c.p2.B().sequence(), false);
+        data.togglePath(c.p1.A().sequence(), c.p1.B().sequence(), true);
+        data.togglePath(c.p2.A().sequence(), c.p2.B().sequence(), true);
         return c;
     }
 
@@ -480,10 +480,10 @@ public class RingProcessor {
                 if (po.equals(pi)) continue;
                 Point pia = pi.A();
                 Point pib = pi.B();
-                source.togglePath(poa.sequence(), pia.sequence(), false);
-                source.togglePath(poa.sequence(), pib.sequence(), false);
-                source.togglePath(pob.sequence(), pib.sequence(), false);
-                source.togglePath(pob.sequence(), pia.sequence(), false);
+                source.togglePath(poa.sequence(), pia.sequence(), true);
+                source.togglePath(poa.sequence(), pib.sequence(), true);
+                source.togglePath(pob.sequence(), pib.sequence(), true);
+                source.togglePath(pob.sequence(), pia.sequence(), true);
             }
         }
     }

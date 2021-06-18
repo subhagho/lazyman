@@ -86,16 +86,16 @@ public class TSPDataMap implements Closeable {
         paths[target] = path;
     }
 
-    public void togglePath(int s1, int s2, boolean negate) {
-        toggle(s1, s2, negate);
-        toggle(s2, s1, negate);
+    public void togglePath(int s1, int s2, boolean useable) {
+        toggle(s1, s2, useable);
+        toggle(s2, s1, useable);
     }
 
-    private void toggle(int s1, int s2, boolean negate) {
+    private void toggle(int s1, int s2, boolean useable) {
         Path[] paths = get(s1);
         Path p = find(paths, s2);
         if (p != null) {
-            p.usable(!negate);
+            p.usable(useable);
         }
     }
 
