@@ -31,7 +31,8 @@ public class OpenRing extends Ring {
         for (Point sp : points) {
             for (Point tp : points) {
                 if (sp.sequence() == tp.sequence()) continue;
-                Path path = new Path(sp, tp);
+                Path path = data.get(sp.sequence(), tp.sequence());
+                if (exists(path)) continue;
                 if (routes.containsKey(path.pathKey())) continue;
                 RingRoute rr = computeRoute(path, points, data);
                 if (rr != null) {
@@ -62,7 +63,9 @@ public class OpenRing extends Ring {
             }
             snapshot = connections.copy();
         }
-        return computeRoute(connections, path, points, rr);
+        if (connections.reachedClosure())
+            return computeRoute(connections, path, points, rr);
+        return null;
     }
 
     private RingRoute computeRoute(Connections connections, Path path, List<Point> points, RingRoute route) {
