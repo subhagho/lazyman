@@ -17,15 +17,15 @@ public class RunIterator {
         this.connections = connections;
     }
 
-    public void run(@NonNull Point point, int index) {
+    public void run(@NonNull Point point) {
         Connections.Connection connection = connections.get(point, true);
         if (connection.isComplete()) {
             return;
         }
 
-        Path[] paths = data.get(index);
+        Path[] paths = data.get(point.sequence());
         if (paths == null) {
-            throw new IllegalArgumentException(String.format("No path data found for sequence. [sequence=%d]", index));
+            throw new IllegalArgumentException(String.format("No path data found for sequence. [sequence=%d]", point.sequence()));
         }
         try {
             Arrays.sort(paths, new Path.SortByDistance());

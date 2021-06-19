@@ -117,7 +117,7 @@ public class Runner {
         for (int ii = 0; ii < reader.getNodeCount(); ii++) {
             Point p = reader.cache().points()[ii];
 
-            iterator.run(p, ii);
+            iterator.run(p);
         }
         if (iteration % 10000 == 0) {
             LogUtils.debug(getClass(),

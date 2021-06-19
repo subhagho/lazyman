@@ -49,8 +49,8 @@ public class OpenRing extends Ring {
         Connections snapshot = null;
 
         while (true) {
-            for (int ii = 0; ii < points.size(); ii++) {
-                iterator.run(points.get(ii), ii);
+            for (Point point : points) {
+                iterator.run(point);
             }
             if (connections.reachedClosure()) {
                 break;
