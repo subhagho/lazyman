@@ -1,7 +1,6 @@
-package com.codekutter.salesman.core.model;
+package com.codekutter.lazyman.core.model;
 
-import com.codekutter.salesman.core.TSPDataMap;
-import com.google.common.base.Preconditions;
+import com.codekutter.lazyman.core.TSPDataMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;

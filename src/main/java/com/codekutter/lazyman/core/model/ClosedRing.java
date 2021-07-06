@@ -1,7 +1,7 @@
-package com.codekutter.salesman.core.model;
+package com.codekutter.lazyman.core.model;
 
-import com.codekutter.salesman.core.RingProcessor;
-import com.codekutter.salesman.core.TSPDataMap;
+import com.codekutter.lazyman.core.RingProcessor;
+import com.codekutter.lazyman.core.TSPDataMap;
 import lombok.NonNull;
 
 import java.util.ArrayList;

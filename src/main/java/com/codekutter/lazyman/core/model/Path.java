@@ -1,4 +1,4 @@
-package com.codekutter.salesman.core.model;
+package com.codekutter.lazyman.core.model;
 
 import com.google.common.base.Preconditions;
 import lombok.*;
