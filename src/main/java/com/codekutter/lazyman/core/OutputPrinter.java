@@ -1,12 +1,12 @@
-package com.codekutter.salesman.core;
+package com.codekutter.lazyman.core;
 
-import com.codekutter.salesman.common.Config;
-import com.codekutter.salesman.common.LogUtils;
-import com.codekutter.salesman.common.RunInfo;
-import com.codekutter.salesman.core.model.Connections;
-import com.codekutter.salesman.core.model.Path;
-import com.codekutter.salesman.core.model.Point;
-import com.codekutter.salesman.core.model.Ring;
+import com.codekutter.lazyman.common.Config;
+import com.codekutter.lazyman.common.LogUtils;
+import com.codekutter.lazyman.common.RunInfo;
+import com.codekutter.lazyman.core.model.Connections;
+import com.codekutter.lazyman.core.model.Path;
+import com.codekutter.lazyman.core.model.Point;
+import com.codekutter.lazyman.core.model.Ring;
 import lombok.NonNull;
 
 import java.io.File;

@@ -1,6 +1,6 @@
-package com.codekutter.salesman.core;
+package com.codekutter.lazyman.core;
 
-import com.codekutter.salesman.core.model.Point;
+import com.codekutter.lazyman.core.model.Point;
 
 // A Java program to check if a given point
 // lies inside a given polygon

@@ -1,4 +1,4 @@
-package com.codekutter.salesman.common;
+package com.codekutter.lazyman.common;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

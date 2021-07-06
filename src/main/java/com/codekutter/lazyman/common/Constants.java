@@ -1,4 +1,4 @@
-package com.codekutter.salesman.common;
+package com.codekutter.lazyman.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

@@ -1,12 +1,12 @@
-package com.codekutter.salesman.core;
+package com.codekutter.lazyman.core;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.codekutter.salesman.common.Config;
-import com.codekutter.salesman.common.LogUtils;
-import com.codekutter.salesman.core.model.*;
-import com.codekutter.salesman.ui.Helper;
-import com.codekutter.salesman.ui.Viewer;
+import com.codekutter.lazyman.common.Config;
+import com.codekutter.lazyman.common.LogUtils;
+import com.codekutter.lazyman.core.model.*;
+import com.codekutter.lazyman.ui.Helper;
+import com.codekutter.lazyman.ui.Viewer;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -82,7 +82,6 @@ public class Runner {
                                 RingProcessor rp = new RingProcessor();
                                 rp.process(rings, reader.cache(), connections);
                             }
-
                             iCount++;
                         }
                     } else {

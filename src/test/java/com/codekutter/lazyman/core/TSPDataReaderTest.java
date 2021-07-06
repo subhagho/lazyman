@@ -1,8 +1,8 @@
-package com.codekutter.salesman.core;
+package com.codekutter.lazyman.core;
 
-import com.codekutter.salesman.common.Config;
-import com.codekutter.salesman.common.LogUtils;
-import com.codekutter.salesman.core.model.Path;
+import com.codekutter.lazyman.common.Config;
+import com.codekutter.lazyman.common.LogUtils;
+import com.codekutter.lazyman.core.model.Path;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.moeaframework.problem.tsplib.DataType;
@@ -16,7 +16,7 @@ class TSPDataReaderTest {
     // private static final String TSP_SOURCE_PATH = "src/test/resources/data/att48.tsp";
     private static final String TSP_SOURCE_PATH = "src/test/resources/data/berlin52.tsp";
     private static final String TSP_TOUR_PATH = "src/test/resources/data/berlin52.opt.tour";
-    private static final String CONFIG_FILE = "src/test/resources/salesman-test.properties";
+    private static final String CONFIG_FILE = "src/test/resources/lazyman-test.properties";
 
     @BeforeAll
     static void beforeAll() {

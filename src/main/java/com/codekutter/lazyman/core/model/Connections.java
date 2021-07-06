@@ -238,4 +238,8 @@ public class Connections {
         }
         return connections;
     }
+
+    public void clear() {
+        connections.clear();
+    }
 }

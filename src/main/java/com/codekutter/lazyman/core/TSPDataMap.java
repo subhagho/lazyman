@@ -1,7 +1,7 @@
-package com.codekutter.salesman.core;
+package com.codekutter.lazyman.core;
 
-import com.codekutter.salesman.core.model.Path;
-import com.codekutter.salesman.core.model.Point;
+import com.codekutter.lazyman.core.model.Path;
+import com.codekutter.lazyman.core.model.Point;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -171,6 +171,14 @@ public class TSPDataMap implements Closeable {
             if (p.A().sequence() == sequence || p.B().sequence() == sequence) return p;
         }
         return null;
+    }
+
+    public void clearElevations() {
+        if (points != null && points.length > 0) {
+            for (Point point : points) {
+                point.elevation(0f);
+            }
+        }
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.codekutter.salesman.ui;
+package com.codekutter.lazyman.ui;
 
 import com.brunomnsilva.smartgraph.containers.SmartGraphDemoContainer;
 import com.brunomnsilva.smartgraph.graph.Edge;
@@ -8,10 +8,10 @@ import com.brunomnsilva.smartgraph.graph.Vertex;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphPanel;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphVertex;
 import com.brunomnsilva.smartgraph.graphview.SmartPlacementStrategy;
-import com.codekutter.salesman.common.LogUtils;
-import com.codekutter.salesman.core.model.Connections;
-import com.codekutter.salesman.core.model.Path;
-import com.codekutter.salesman.core.model.Point;
+import com.codekutter.lazyman.common.LogUtils;
+import com.codekutter.lazyman.core.model.Connections;
+import com.codekutter.lazyman.core.model.Path;
+import com.codekutter.lazyman.core.model.Point;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;

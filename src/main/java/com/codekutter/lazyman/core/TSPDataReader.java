@@ -1,8 +1,8 @@
-package com.codekutter.salesman.core;
+package com.codekutter.lazyman.core;
 
-import com.codekutter.salesman.common.LogUtils;
-import com.codekutter.salesman.core.model.Path;
-import com.codekutter.salesman.core.model.Point;
+import com.codekutter.lazyman.common.LogUtils;
+import com.codekutter.lazyman.core.model.Path;
+import com.codekutter.lazyman.core.model.Point;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.Getter;

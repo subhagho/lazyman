@@ -26,12 +26,12 @@ package org.moeaframework.problem.tsplib;
 public enum DataType {
 	
 	/**
-	 * Data for a symmetric traveling salesman problem.
+	 * Data for a symmetric traveling lazyman problem.
 	 */
 	TSP,
 	
 	/**
-	 * Data for an asymmetric traveling salesman problem.
+	 * Data for an asymmetric traveling lazyman problem.
 	 */
 	ATSP,
 	

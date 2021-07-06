@@ -4,12 +4,13 @@ import com.codekutter.salesman.core.RunIterator;
 import com.codekutter.salesman.core.TSPDataMap;
 import lombok.NonNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class OpenRing extends Ring {
-    private Map<String, RingRoute> routes = new HashMap<>();
+    private final Map<String, RingRoute> routes = new HashMap<>();
 
     public OpenRing(short number) {
         super(number);
@@ -17,6 +18,19 @@ public class OpenRing extends Ring {
 
     public OpenRing(@NonNull Ring source) {
         super(source, false);
+    }
+
+    public List<RingRoute> getSortedRoutes() {
+        if (!routes.isEmpty()) {
+            List<RingRoute> rr = new ArrayList<>(routes.size());
+            for (String key : routes.keySet()) {
+                rr.add(routes.get(key));
+            }
+            rr.sort(new RingRoute.SortRoute());
+
+            return rr;
+        }
+        return null;
     }
 
     @Override

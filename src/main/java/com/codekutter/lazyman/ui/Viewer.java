@@ -1,4 +1,4 @@
-package com.codekutter.salesman.ui;
+package com.codekutter.lazyman.ui;
 
 import com.google.common.base.Preconditions;
 import javafx.application.Application;

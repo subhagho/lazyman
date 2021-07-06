@@ -22,7 +22,7 @@
  *
  */
 
-package com.codekutter.salesman.common;
+package com.codekutter.lazyman.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;

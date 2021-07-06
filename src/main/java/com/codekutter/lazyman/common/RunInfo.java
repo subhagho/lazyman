@@ -1,4 +1,4 @@
-package com.codekutter.salesman.common;
+package com.codekutter.lazyman.common;
 
 import lombok.Getter;
 import lombok.NonNull;

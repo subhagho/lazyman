@@ -1,10 +1,10 @@
-package com.codekutter.salesman.core;
+package com.codekutter.lazyman.core;
 
-import com.codekutter.salesman.common.LogUtils;
-import com.codekutter.salesman.core.model.Connections;
-import com.codekutter.salesman.core.model.Path;
-import com.codekutter.salesman.core.model.Point;
-import com.codekutter.salesman.core.model.Ring;
+import com.codekutter.lazyman.common.LogUtils;
+import com.codekutter.lazyman.core.model.Connections;
+import com.codekutter.lazyman.core.model.Path;
+import com.codekutter.lazyman.core.model.Point;
+import com.codekutter.lazyman.core.model.Ring;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.NonNull;
@@ -117,7 +117,9 @@ public class RingProcessor {
 
     public void process(@NonNull List<Ring> rings,
                         @NonNull TSPDataMap data, @NonNull Connections connections) {
-        markConnections(connections, data);
+        data.clearElevations();
+
+        markUsedPaths(connections, data);
         List<Ring> openRings = new ArrayList<>();
         for (Ring ring : rings) {
             if (!ring.isClosed()) {
@@ -325,7 +327,7 @@ public class RingProcessor {
             double ds = source.paths().get(ii).distance();
             for (int jj = 0; jj < target.paths().size(); jj++) {
                 double dt = target.paths().get(jj).distance();
-                Path[] paths = findMinPaths(source.paths().get(ii), target.paths().get(jj), data);
+                Path[] paths = data.findMinPaths(source.paths().get(ii), target.paths().get(jj));
                 if (paths != null && paths[0] != null && paths[1] != null) {
                     double delta = (paths[0].distance() + paths[1].distance()) - (ds + dt);
                     Connect connect = new Connect();
@@ -439,39 +441,6 @@ public class RingProcessor {
         return null;
     }
 
-    private Path[] findMinPaths(Path p1, Path p2, TSPDataMap data) {
-        Path[] paths = new Path[2];
-        double d1 = 0, d2 = 0;
-        Point a1 = p1.A();
-        Point a2 = p2.A();
-        Point b1 = p1.B();
-        Point b2 = p2.B();
-        Path pa = data.get(a1.sequence(), a2.sequence());
-        if (pa == null) {
-            throw new RuntimeException(String.format("Path not found. [A=%s][B=%s]", a1, a2));
-        }
-        Path pb = data.get(b1.sequence(), b2.sequence());
-        if (pb == null) {
-            throw new RuntimeException(String.format("Path not found. [A=%s][B=%s]", b1, b2));
-        }
-        paths[0] = pa;
-        paths[1] = pb;
-        d1 = pa.distance() + pb.distance();
-
-        a1 = p1.A();
-        a2 = p2.B();
-        b1 = p1.B();
-        b2 = p2.A();
-        pa = data.get(a1.sequence(), a2.sequence());
-        pb = data.get(b1.sequence(), b2.sequence());
-        d2 = pa.distance() + pb.distance();
-        if (d2 < d1) {
-            paths[0] = pa;
-            paths[1] = pb;
-        }
-        return paths;
-    }
-
     private void markOpenRingConnections(Ring ring, TSPDataMap source) {
         for (Path po : ring.paths()) {
             Point poa = po.A();
@@ -488,7 +457,7 @@ public class RingProcessor {
         }
     }
 
-    private void markConnections(Connections connections, TSPDataMap source) {
+    private void markUsedPaths(Connections connections, TSPDataMap source) {
         for (Connections.Connection connection : connections.connections().values()) {
             if (connection.connections() != null) {
                 Point point = connection.point();
