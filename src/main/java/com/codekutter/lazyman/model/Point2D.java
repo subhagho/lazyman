@@ -1,4 +1,4 @@
-package com.codekutter.lazyman.core.model;
+package com.codekutter.lazyman.model;
 
 import com.google.common.base.Strings;
 import lombok.Getter;
@@ -10,18 +10,16 @@ import java.util.Objects;
 @Getter
 @Setter
 @Accessors(fluent = true)
-public class Point {
+public class Point2D {
     private int sequence;
     private Double X = null;
     private Double Y = null;
-    private double elevation = 0;
     private String key;
-    private short ring = -1;
 
-    public Point() {
+    public Point2D() {
     }
 
-    public Point(double x, double y) {
+    public Point2D(double x, double y) {
         X = x;
         Y = y;
     }
@@ -30,7 +28,7 @@ public class Point {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Point point = (Point) o;
+        Point2D point = (Point2D) o;
         boolean ret = true;
         ret = sequence == point.sequence;
         ret = ret && (X == null && point.X == null || (X != null && X.equals(point.X))) && (Y == null && point.Y == null || (Y != null && Y.equals(point.Y)));
@@ -40,21 +38,21 @@ public class Point {
 
     @Override
     public String toString() {
-        return String.format("[%d (%d)]{%f}", sequence, ring, elevation);
+        return String.format("[%d (%d)][X=%f, Y=%f]", sequence, X, Y);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(sequence, X, Y, elevation);
+        return Objects.hash(sequence, X, Y);
     }
 
     public String print() {
-        return String.format("%d (%f, %f, %f)", sequence, X, Y, elevation);
+        return String.format("%d (%f, %f)", sequence, X, Y);
     }
 
     public String hashKey() {
         if (Strings.isNullOrEmpty(key)) {
-            key = String.format("%d (%f, %f)", sequence, X, Y);
+            key = String.format("%d [X=%f, Y=%f]", sequence, X, Y);
         }
         return key;
     }

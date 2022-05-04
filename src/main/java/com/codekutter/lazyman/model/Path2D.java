@@ -1,4 +1,4 @@
-package com.codekutter.lazyman.core.model;
+package com.codekutter.lazyman.model;
 
 import com.google.common.base.Preconditions;
 import lombok.*;
@@ -11,65 +11,31 @@ import java.util.Objects;
 @Setter
 @Accessors(fluent = true)
 @ToString
-public class Path implements Comparable<Path> {
+public class Path2D implements Comparable<Path2D> {
     public static final double G = 9.8f;
     public static final double MU = 0.2f;
     @Setter(AccessLevel.NONE)
-    private Point A;
+    private Point2D A;
     @Setter(AccessLevel.NONE)
-    private Point B;
-    private double elevation = 0;
+    private Point2D B;
     private double length;
-    private final double actualLength;
-    private boolean usable = true;
 
-    public Path(@NonNull Point A, @NonNull Point B, double length) {
+    public Path2D(@NonNull Point2D A, @NonNull Point2D B, double length) {
         this.A = A;
         this.B = B;
-        this.actualLength = length;
-        this.length = actualLength;
+        this.length = length;
     }
 
-    public Path(@NonNull Point A, @NonNull Point B) {
+    public Path2D(@NonNull Point2D A, @NonNull Point2D B) {
         Preconditions.checkArgument(A.Y() != null && A.X() != null);
         Preconditions.checkArgument(B.Y() != null && B.X() != null);
 
-        actualLength = Math.sqrt(Math.pow((A.X() - B.X()), 2) + Math.pow((A.Y() - B.Y()), 2));
+        this.length = Math.sqrt(Math.pow((A.X() - B.X()), 2) + Math.pow((A.Y() - B.Y()), 2));
         this.A = A;
         this.B = B;
-        this.length = actualLength;
     }
 
-    public double distance() {
-        if (A != null && B != null) {
-            double d = 0;
-            double h = 0;
-            if (elevation == 0) {
-                h = A.elevation() - B.elevation();
-                d = Math.sqrt(Math.pow(length, 2) + Math.pow(h, 2));
-            } else {
-                double h1 = elevation - A.elevation();
-                double d1 = Math.sqrt(Math.pow(length / 2f, 2) + Math.pow(h1, 2));
-                double h2 = elevation - B.elevation();
-                double d2 = Math.sqrt(Math.pow(length / 2f, 2) + Math.pow(h2, 2));
-                d = d1 + d2;
-                h = Math.max(h1, h2);
-            }
-            if (d > 0) {
-                return d;
-            }
-        }
-        return Double.MAX_VALUE;
-    }
-
-    public double elevation() {
-        if (A != null && B != null) {
-            return Math.sqrt(Math.pow(A.elevation() - B.elevation(), 2));
-        }
-        return Long.MAX_VALUE;
-    }
-
-    public Point getTarget(@NonNull Point source) {
+    public Point2D getTarget(@NonNull Point2D source) {
         if (A.sequence() == source.sequence()) {
             return B;
         } else if (B.sequence() == source.sequence()) {
@@ -78,7 +44,7 @@ public class Path implements Comparable<Path> {
         return null;
     }
 
-    public Point getTarget(int source) {
+    public Point2D getTarget(int source) {
         if (A.sequence() == source) {
             return B;
         } else if (B.sequence() == source) {
@@ -87,38 +53,33 @@ public class Path implements Comparable<Path> {
         return null;
     }
 
-    public Point connectingPoint(@NonNull Path path) {
+    public Point2D connectingPoint(@NonNull Path2D path) {
         if (hasPoint(path.A)) return path.A;
         else if (hasPoint(path.B)) return path.B;
         return null;
     }
 
-    public boolean hasPoint(@NonNull Point point) {
+    public boolean hasPoint(@NonNull Point2D point) {
         return A.sequence() == point.sequence() || B.sequence() == point.sequence();
     }
 
     @Override
-    public int compareTo(@NonNull Path o) {
-        return (int) (distance() - o.distance());
+    public int compareTo(@NonNull Path2D o) {
+        return (int) (length() - o.length());
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Path path = (Path) o;
+        Path2D path = (Path2D) o;
         return (A.equals(path.A) && B.equals(path.B)) || (A.equals(path.B) && B.equals(path.A));
     }
 
     public String pathKey() {
-        Point a = (A.sequence() < B.sequence() ? A : B);
-        Point b = (A.sequence() < B.sequence() ? B : A);
+        Point2D a = (A.sequence() < B.sequence() ? A : B);
+        Point2D b = (A.sequence() < B.sequence() ? B : A);
         return String.format("%d->%d", a.sequence(), b.sequence());
-    }
-
-    public String edgeString() {
-        String pk = pathKey();
-        return String.format("%s[%f]", pk, actualLength);
     }
 
     @Override
@@ -126,7 +87,7 @@ public class Path implements Comparable<Path> {
         return Objects.hash(A, B);
     }
 
-    public static class SortByDistance implements Comparator<Path> {
+    public static class SortByDistance implements Comparator<Path2D> {
 
         /**
          * Compares its two arguments for order.  Returns a negative integer,
@@ -169,12 +130,12 @@ public class Path implements Comparable<Path> {
          *                              being compared by this comparator.
          */
         @Override
-        public int compare(Path o1, Path o2) {
+        public int compare(Path2D o1, Path2D o2) {
             if (o1 == null && o2 == null) return 0;
             else if (o1 != null && o2 == null) return -1;
             else if (o1 == null) return 1;
 
-            double ret = o1.distance() - o2.distance();
+            double ret = o1.length() - o2.length();
             int v = 0;
             if (ret < 0) {
                 v = (int) Math.floor(ret);
@@ -193,12 +154,12 @@ public class Path implements Comparable<Path> {
          * @since 1.8
          */
         @Override
-        public Comparator<Path> reversed() {
+        public Comparator<Path2D> reversed() {
             return Comparator.super.reversed();
         }
     }
 
-    public static class SortByLength implements Comparator<Path> {
+    public static class SortByLength implements Comparator<Path2D> {
 
         /**
          * Compares its two arguments for order.  Returns a negative integer,
@@ -241,12 +202,12 @@ public class Path implements Comparable<Path> {
          *                              being compared by this comparator.
          */
         @Override
-        public int compare(Path o1, Path o2) {
+        public int compare(Path2D o1, Path2D o2) {
             if (o1 == null && o2 == null) return 0;
             else if (o1 != null && o2 == null) return -1;
             else if (o1 == null) return 1;
 
-            double ret = o1.actualLength - o2.actualLength;
+            double ret = o1.length - o2.length;
             int v = 0;
             if (ret < 0) {
                 v = (int) Math.floor(ret);
@@ -265,14 +226,14 @@ public class Path implements Comparable<Path> {
          * @since 1.8
          */
         @Override
-        public Comparator<Path> reversed() {
+        public Comparator<Path2D> reversed() {
             return Comparator.super.reversed();
         }
     }
 
-    public static class PathComparator implements Comparator<Path> {
+    public static class PathComparator implements Comparator<Path2D> {
         @Override
-        public int compare(Path o1, Path o2) {
+        public int compare(Path2D o1, Path2D o2) {
             return o1.compareTo(o2);
         }
     }
