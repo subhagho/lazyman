@@ -28,7 +28,7 @@ public class Connection {
     }
 
     public double distance() {
-        double h = PA.elevation() - PB.elevation();
+        double h = PA.Z() - PB.Z();
         return Math.sqrt(Math.pow(distanceDelta, 2) + Math.pow(h, 2));
     }
 
@@ -110,6 +110,6 @@ public class Connection {
      */
     @Override
     public String toString() {
-        return String.format("%s [distance=%f", path.pathKey(), distance());
+        return String.format("%s [distance=%f", Path2D.pathKey(path), distance());
     }
 }

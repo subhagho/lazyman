@@ -16,7 +16,7 @@ public class PointVertex {
     private final Point2D point;
     private final String key;
 
-    private double elevation = 0;
+    private double Z = 0;
     @Setter(AccessLevel.NONE)
     private Path2D[] minPaths = new Path2D[2];
     @Setter(AccessLevel.NONE)
@@ -99,9 +99,12 @@ public class PointVertex {
         return ret;
     }
 
-    public double distance() {
+    public double distanceDelta() {
         double d = 0;
-
+        if (connections[0] != null && connections[1] != null) {
+            double dd = connections[0].distance() + connections[1].distance();
+            d = dd - minDistance;
+        }
         return d;
     }
 
@@ -183,6 +186,6 @@ public class PointVertex {
      */
     @Override
     public String toString() {
-        return String.format("%s, elevation=%f", point.toString(), elevation);
+        return String.format("%s, Z=%f", point.toString(), Z);
     }
 }

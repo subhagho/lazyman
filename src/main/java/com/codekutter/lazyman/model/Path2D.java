@@ -12,8 +12,6 @@ import java.util.Objects;
 @Accessors(fluent = true)
 @ToString
 public class Path2D implements Comparable<Path2D> {
-    public static final double G = 9.8f;
-    public static final double MU = 0.2f;
     @Setter(AccessLevel.NONE)
     private Point2D A;
     @Setter(AccessLevel.NONE)
@@ -76,7 +74,13 @@ public class Path2D implements Comparable<Path2D> {
         return (A.equals(path.A) && B.equals(path.B)) || (A.equals(path.B) && B.equals(path.A));
     }
 
-    public String pathKey() {
+    public static String pathKey(@NonNull Path2D path) {
+        Point2D a = (path.A.sequence() < path.B.sequence() ? path.A : path.B);
+        Point2D b = (path.A.sequence() < path.B.sequence() ? path.B : path.A);
+        return String.format("%d->%d", a.sequence(), b.sequence());
+    }
+
+    public static String pathKey(@NonNull Point2D A, @NonNull Point2D B) {
         Point2D a = (A.sequence() < B.sequence() ? A : B);
         Point2D b = (A.sequence() < B.sequence() ? B : A);
         return String.format("%d->%d", a.sequence(), b.sequence());
