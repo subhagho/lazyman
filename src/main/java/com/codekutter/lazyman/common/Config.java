@@ -8,6 +8,8 @@ import lombok.experimental.Accessors;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 @Getter
@@ -23,7 +25,7 @@ public class Config {
     private void load(@NonNull String filename) {
         try {
             config = new Properties();
-            config.load(new FileInputStream(filename));
+            config.load(Files.newInputStream(Paths.get(filename)));
 
             initWorkingDir();
             runInfo = new RunInfo();

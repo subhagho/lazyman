@@ -9,8 +9,8 @@ public class Viewer extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        Preconditions.checkState(Helper.connections != null);
-        Helper.show(Helper.connections);
+        Preconditions.checkState(Helper.journey != null);
+        Helper.show(Helper.journey);
     }
 
     public static void show() {

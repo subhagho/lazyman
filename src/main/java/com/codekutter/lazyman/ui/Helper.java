@@ -9,9 +9,9 @@ import com.brunomnsilva.smartgraph.graphview.SmartGraphPanel;
 import com.brunomnsilva.smartgraph.graphview.SmartGraphVertex;
 import com.brunomnsilva.smartgraph.graphview.SmartPlacementStrategy;
 import com.codekutter.lazyman.common.LogUtils;
-import com.codekutter.lazyman.core.model.Connections;
-import com.codekutter.lazyman.core.model.Path;
-import com.codekutter.lazyman.core.model.Point;
+import com.codekutter.lazyman.v2.model.Journey;
+import com.codekutter.lazyman.v2.model.Path;
+import com.codekutter.lazyman.v2.model.Point;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -28,9 +28,8 @@ public class Helper {
     public static double minY = Double.MAX_VALUE;
     public static double maxX = Double.MIN_VALUE;
     public static double maxY = Double.MIN_VALUE;
-    public static Connections connections;
     public static List<Tour> tours;
-    public static Point[] points;
+    public static Journey journey;
 
     @Setter
     @Getter
@@ -42,28 +41,29 @@ public class Helper {
         List<Edge<String, Point>> tours;
     }
 
-    public static GraphView build(@NonNull Connections connections) {
+    public static GraphView build(@NonNull Journey journey) {
         GraphView view = new GraphView();
         Map<String, Vertex<Point>> points = new HashMap<>();
         Map<String, Edge<String, Point>> paths = new HashMap<>();
-        for (Connections.Connection connection : connections.connections().values()) {
-            Point point = connection.point();
-            if (point.X() < Helper.minX) {
-                Helper.minX = point.X();
-            }
-            if (point.Y() < Helper.minY) {
-                Helper.minY = point.Y();
-            }
-            if (point.X() > Helper.maxX) {
-                Helper.maxX = point.X();
-            }
-            if (point.Y() > Helper.maxY) {
-                Helper.maxY = point.Y();
-            }
-            getVertex(point, view, points);
-            for (Connections.ConnectionPath path : connection.connections()) {
-                if (path != null) {
-                    addPath(path.path(), view, paths, points);
+        for (LinkedList<Point> tour : journey.route()) {
+            for (Point point : tour) {
+                if (point.X() < Helper.minX) {
+                    Helper.minX = point.X();
+                }
+                if (point.Y() < Helper.minY) {
+                    Helper.minY = point.Y();
+                }
+                if (point.X() > Helper.maxX) {
+                    Helper.maxX = point.X();
+                }
+                if (point.Y() > Helper.maxY) {
+                    Helper.maxY = point.Y();
+                }
+                getVertex(point, view, points);
+                for (Path path : point.connections()) {
+                    if (path != null) {
+                        addPath(path, view, paths, points);
+                    }
                 }
             }
         }
@@ -73,7 +73,7 @@ public class Helper {
             view.tours = new ArrayList<>();
             for (int index = 0; index < t.size(); index++) {
                 int pi = t.get(index);
-                Point p = Helper.points[pi - 1];
+                Point p = journey.points().get(pi - 1);
                 if (lp != null) {
                     Vertex<Point> v1 = getVertex(lp, view, points);
                     Vertex<Point> v2 = getVertex(p, view, points);
@@ -109,8 +109,8 @@ public class Helper {
         return pv;
     }
 
-    public static void show(@NonNull Connections connections) {
-        GraphView view = build(connections);
+    public static void show(@NonNull Journey journey) {
+        GraphView view = build(journey);
         LogUtils.info(Helper.class, view.graph.toString());
         view.view = new SmartGraphPanel<>(view.graph, view.strategy);
 
@@ -124,7 +124,7 @@ public class Helper {
         Use SmartGraphDemoContainer if you want zoom capabilities and automatic layout toggling
         */
         //Scene scene = new Scene(graphView, 1024, 768);
-        Scene scene = new Scene(new SmartGraphDemoContainer(view.view), 1600, 800);
+        Scene scene = new Scene(new SmartGraphDemoContainer(view.view), 1200, 800);
 
         Stage stage = new Stage(StageStyle.DECORATED);
         stage.setTitle("Salesman - Viewer");
@@ -161,8 +161,8 @@ public class Helper {
             for (SmartGraphVertex<V> vertex : vertices) {
                 Vertex<Point> pv = (Vertex<Point>) vertex.getUnderlyingVertex();
                 Point p = pv.element();
-                double x = (p.X() - Helper.minX) * width / (Helper.maxX - Helper.minX);
-                double y = (p.Y() - Helper.minY) * height / (Helper.maxY - Helper.minY);
+                double x = (p.X() - Helper.minX) * (width - 32) / (Helper.maxX - Helper.minX);
+                double y = (p.Y() - Helper.minY) * (height - 32) / (Helper.maxY - Helper.minY);
                 vertex.setPosition(x, y);
             }
         }

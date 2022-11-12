@@ -98,13 +98,7 @@ public class Runner {
             }
             LogUtils.info(getClass(), String.format("Reached equilibrium : [#iterations=%d][time=%d]", iteration, (System.currentTimeMillis() - st)));
             OutputPrinter.print(reader.cache(), connections, iteration, rings);
-            if (view) {
-                Helper.connections = connections;
-                Helper.points = reader.cache().points();
-                Helper.tours = reader.tours();
 
-                Viewer.show();
-            }
         } catch (Exception ex) {
             LogUtils.error(getClass(), ex);
             throw new RuntimeException(ex);

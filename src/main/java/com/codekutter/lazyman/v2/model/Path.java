@@ -16,8 +16,6 @@ public class Path implements Comparable<Path> {
     private Point A;
     private Point B;
     private double length;
-    @Setter(AccessLevel.NONE)
-    private double distance;
     private double actualLength;
 
     public Path(@NonNull Point A, @NonNull Point B) {
@@ -33,8 +31,14 @@ public class Path implements Comparable<Path> {
         Preconditions.checkNotNull(A);
         Preconditions.checkNotNull(B);
         double h = A.height(B);
-        distance = Math.PI / 2 * (Math.sqrt(((h * h) + (length * length)) / 2));
-        return distance;
+        return compute(h, length);
+    }
+
+    public double compute(double height, double length) {
+        Preconditions.checkNotNull(A);
+        Preconditions.checkNotNull(B);
+        //return Math.sqrt(((height * height) + (length * length)));
+       return Math.sqrt((length * length) + (height * Math.PI));
     }
 
     @Override
@@ -77,5 +81,22 @@ public class Path implements Comparable<Path> {
                 ", B=" + B +
                 ", actualLength=" + actualLength +
                 '}';
+    }
+
+    public String pathKey() {
+        Point S = null;
+        Point T = null;
+        if (A.compare(B) <= 0) {
+            S = A;
+            T = B;
+        } else {
+            S = B;
+            T = A;
+        }
+        return String.format("[%f, %f]:[%f, %f]", S.X(), S.Y(), T.X(), T.Y());
+    }
+
+    public String edgeString() {
+        return String.format("%s {%f}", pathKey(), actualLength);
     }
 }

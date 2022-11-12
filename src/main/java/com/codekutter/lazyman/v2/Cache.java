@@ -3,34 +3,44 @@ package com.codekutter.lazyman.v2;
 import com.codekutter.lazyman.v2.model.Path;
 import com.codekutter.lazyman.v2.model.Point;
 import com.google.common.base.Preconditions;
-import lombok.NonNull;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
+@Accessors(fluent = true)
 public class Cache {
     private Map<String, Point> points;
     private List<String> index;
+    private int size;
 
     public Cache init(int size) {
         Preconditions.checkArgument(size > 0);
         points = new LinkedHashMap<>(size);
         index = new ArrayList<>(size);
+        for (int ii = 0; ii < size; ii++) {
+            index.add(null);
+        }
+        this.size = size;
         return this;
     }
 
-    public void add(int sequence, Double X, Double Y) throws Exception {
+    public Point add(int sequence, Double X, Double Y) throws Exception {
         if (X == null) X = -1.0;
         if (Y == null) Y = -1.0;
-        Point point = new Point(sequence, X, Y, points.size() - 1);
+        Point point = new Point(sequence, X, Y, size);
         String key = point.toString();
         if (points.containsKey(key)) {
             throw new Exception(String.format("Point already loaded. [point=%s]", point));
         }
         points.put(key, point);
         index.set(sequence, key);
+
+        return point;
     }
 
     public Point get(int index) {
@@ -58,6 +68,34 @@ public class Cache {
         Point p1 = get(seq1);
         Preconditions.checkNotNull(p1);
         return p1.path(seq2);
+    }
+
+    public List<Point> copyPoints(int startIndex) {
+        List<Point> pl = new ArrayList<>(index.size());
+        for (int ii = 0; ii < index.size(); ii++) {
+            int indx = ii + startIndex;
+            if (indx >= index.size()) {
+                indx -= index.size();
+            }
+            String key = index.get(indx);
+            Point p = new Point(points.get(key));
+            pl.add(p);
+        }
+        return pl;
+    }
+
+    public List<Point> pointList(int startIndex) {
+        List<Point> pl = new ArrayList<>(index.size());
+        for (int ii = 0; ii < index.size(); ii++) {
+            int indx = ii + startIndex;
+            if (indx >= index.size()) {
+                indx -= index.size();
+            }
+            String key = index.get(indx);
+            Point p = points.get(key);
+            pl.add(p);
+        }
+        return pl;
     }
 
     public void postLoad() throws Exception {
