@@ -27,18 +27,32 @@ public class Path implements Comparable<Path> {
         length = 0;
     }
 
-    public double compute() {
+    public double compute(int runLevel) {
         Preconditions.checkNotNull(A);
         Preconditions.checkNotNull(B);
         double h = A.height(B);
-        return compute(h, length) - (1.0 / (1 + A().chainLength()));
+        if (runLevel < 2) {
+            return compute(h, length);
+        }
+        return compute(h, length, A.chainLength());
+    }
+
+    public double compute(double height, double length, int count) {
+        Preconditions.checkNotNull(A);
+        Preconditions.checkNotNull(B);
+        if (length == 0) length = 1;
+        if (count == 0) count = 1;
+
+        double d = A.chainLength() * count / (length * length);
+        double w = Math.pow((height + length) / (length), 2);
+        return w + d;
+        //return Math.sqrt((Math.pow(length, 2) + (height * height))) + d;
     }
 
     public double compute(double height, double length) {
         Preconditions.checkNotNull(A);
         Preconditions.checkNotNull(B);
-        //return Math.sqrt(((height * height) + (length * length))/2);
-        return Math.sqrt((Math.pow(length, 2) + (height)));
+        return Math.sqrt((length * length) + height);
     }
 
     @Override
