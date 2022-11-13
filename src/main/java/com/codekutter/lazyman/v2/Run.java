@@ -44,7 +44,7 @@ public class Run {
     private void run() {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(config));
         Preconditions.checkArgument(!Strings.isNullOrEmpty(tspData));
-
+        JourneyProcessor processor = null;
         try {
             Config.init(config);
             DataType type = DataType.TSP;
@@ -63,26 +63,39 @@ public class Run {
             }
             RunIteration previous = null;
             int iterations = 0;
+            int startIndex = 0;
             while (true) {
-                RunIteration iteration = new RunIteration(iterations, 0, reader.cache());
+                RunIteration iteration = new RunIteration(iterations, startIndex, reader.cache());
                 iteration.run();
                 String outf = iteration.print();
                 if (iteration.isCompleted()) {
                     LogUtils.info(getClass(),
                             String.format("Completed in [%d] iterations. [output=%s]", iterations, outf));
-                    previous = iteration;
-                    break;
+                    Journey journey = new Journey(iteration.points());
+                    journey.load();
+                    if (journey.isComplete()) {
+                        previous = iteration;
+                        break;
+                    } else {
+                        if (previous != null && iteration.compare(previous.points())) {
+                            LogUtils.warn(getClass(), String.format("Stuck after [%d] iteration.", iterations));
+                            break;
+                        }
+                        if (iterations > 1500) {
+                            LogUtils.warn(getClass(), String.format("Breaking after [%d] iteration.", iterations));
+                            previous = iteration;
+                            break;
+                        }
+                        previous = iteration;
+                        journey.check();
+                        continue;
+                    }
                 } else if (previous != null) {
                     if (iteration.compare(previous.points())) {
                         LogUtils.warn(getClass(), String.format("Stuck after [%d] iteration.", iterations));
-                        previous = iteration;
                         break;
                     }
-                    if (iterations > 1500) {
-                        LogUtils.warn(getClass(), String.format("Breaking after [%d] iteration.", iterations));
-                        previous = iteration;
-                        break;
-                    }
+
                 }
                 if (iterations % 500 == 0) {
                     LogUtils.info(getClass(), String.format("Completed [%d] iterations...", iterations));
@@ -91,9 +104,18 @@ public class Run {
                 previous.save();
                 iterations++;
             }
-            if (previous != null) {
+            if (processor == null) {
                 Journey journey = new Journey(previous.points());
                 journey.load();
+                printTour(previous, reader.filename(), journey);
+
+                if (view) {
+                    Helper.journey = journey;
+                    Helper.tours = reader.tours();
+                    Viewer.show();
+                }
+            } else {
+                Journey journey = processor.journey();
                 printTour(previous, reader.filename(), journey);
 
                 if (view) {

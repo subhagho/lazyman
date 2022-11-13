@@ -124,7 +124,7 @@ public class Helper {
         Use SmartGraphDemoContainer if you want zoom capabilities and automatic layout toggling
         */
         //Scene scene = new Scene(graphView, 1024, 768);
-        Scene scene = new Scene(new SmartGraphDemoContainer(view.view), 1200, 800);
+        Scene scene = new Scene(new SmartGraphDemoContainer(view.view), 1400, 800);
 
         Stage stage = new Stage(StageStyle.DECORATED);
         stage.setTitle("Salesman - Viewer");

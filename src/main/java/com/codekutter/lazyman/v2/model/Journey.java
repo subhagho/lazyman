@@ -108,4 +108,14 @@ public class Journey {
     public boolean isComplete() {
         return route.size() == 1;
     }
+
+    public void check() {
+        for (LinkedList<Point> ring : route) {
+            if (ring.size() <= 3) {
+                for (Point p : ring) {
+                    p.clearConnections();
+                }
+            }
+        }
+    }
 }

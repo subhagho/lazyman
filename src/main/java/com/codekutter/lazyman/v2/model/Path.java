@@ -31,14 +31,14 @@ public class Path implements Comparable<Path> {
         Preconditions.checkNotNull(A);
         Preconditions.checkNotNull(B);
         double h = A.height(B);
-        return compute(h, length);
+        return compute(h, length) - (1.0 / (1 + A().chainLength()));
     }
 
     public double compute(double height, double length) {
         Preconditions.checkNotNull(A);
         Preconditions.checkNotNull(B);
-        //return Math.sqrt(((height * height) + (length * length)));
-       return Math.sqrt((length * length) + (height * Math.PI));
+        //return Math.sqrt(((height * height) + (length * length))/2);
+        return Math.sqrt((Math.pow(length, 2) + (height)));
     }
 
     @Override

@@ -23,6 +23,7 @@ public class Point {
     private List<Integer> sortIndex;
     private final Path[] connections = new Path[2];
     private int connectCount = 0;
+    private int chainLength = 0;
 
     public Point(int sequence,
                  @NonNull Double X,
@@ -56,6 +57,12 @@ public class Point {
         paths.put(t.sequence, path);
     }
 
+    public void clearConnections() {
+        connections[0] = null;
+        connections[1] = null;
+        connectCount = 0;
+    }
+
     public void connect(@NonNull Path path) throws Exception {
         if (hasConnection(path)) return;
         if (connections[0] == null) {
@@ -71,6 +78,57 @@ public class Point {
             delta = (d1 + d2) - minConnectionDistance;
         }
         connectCount++;
+        updateChain(0);
+    }
+
+    private void updateChain(int value) throws Exception {
+        Set<Integer> visited = new LinkedHashSet<>();
+        chainLength = connectionCount(this, visited) + value;
+        visited.clear();
+        updateChain(this, chainLength, visited);
+    }
+
+    private void updateChain(Point source, int value, Set<Integer> visited) throws Exception {
+        if (visited.contains(sequence)) {
+            throw new Exception(String.format("Point already there [%s] [%d]", visited, sequence));
+        }
+        visited.add(sequence);
+        if (connections[0] != null) {
+            Point t = connections[0].target(this);
+            if (!t.equals(source) && !visited.contains(t.sequence)) {
+                t.updateChain(this, value, visited);
+            }
+        }
+        if (connections[1] != null) {
+            Point t = connections[1].target(this);
+            if (!t.equals(source) && !visited.contains(t.sequence)) {
+                t.updateChain(this, value, visited);
+            }
+        }
+        chainLength = value;
+    }
+
+    private int connectionCount(Point source, Set<Integer> visited) throws Exception {
+        if (visited.contains(sequence)) {
+            throw new Exception(String.format("Point already there [%s] [%d]", visited, sequence));
+        }
+        visited.add(sequence);
+        int c = 0;
+        if (connections[0] != null) {
+            Point t = connections[0].target(this);
+            if (!t.equals(source) && !visited.contains(t.sequence)) {
+                c += t.connectionCount(this, visited);
+                c++;
+            }
+        }
+        if (connections[1] != null) {
+            Point t = connections[1].target(this);
+            if (!t.equals(source) && !visited.contains(t.sequence)) {
+                c += t.connectionCount(this, visited);
+                c++;
+            }
+        }
+        return c;
     }
 
     public boolean hasPath(@NonNull Point point) {
@@ -202,16 +260,20 @@ public class Point {
         if (connections[0] != null) {
             Point t = connections[0].target(this);
             if (t.equals(target)) {
+                t.updateChain(-1);
                 connections[0] = null;
                 connectCount--;
+                updateChain(-1);
                 return;
             }
         }
         if (connections[1] != null) {
             Point t = connections[1].target(this);
             if (t.equals(target)) {
+                t.updateChain(-1);
                 connections[1] = null;
                 connectCount--;
+                updateChain(-1);
                 return;
             }
         }
@@ -290,11 +352,7 @@ public class Point {
 
     @Override
     public String toString() {
-        return "{" +
-                sequence +
-                ", " + X +
-                ", " + Y +
-                '}';
+        return String.format("{%d} [%f, %f, %f] (%d)", sequence, X, Y, elevation, chainLength);
     }
 
     public int compare(@NonNull Point other) {
