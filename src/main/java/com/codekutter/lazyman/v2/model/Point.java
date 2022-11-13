@@ -63,7 +63,7 @@ public class Point {
         connectCount = 0;
     }
 
-    public void connect(@NonNull Path path, int runLevel) throws Exception {
+    public void connect(@NonNull Path path) throws Exception {
         if (hasConnection(path)) return;
         if (connections[0] == null) {
             connections[0] = path;
@@ -73,8 +73,8 @@ public class Point {
             throw new Exception(String.format("[%s] No empty connection slot found.", this));
         }
         if (connections[0] != null && connections[1] != null) {
-            double d1 = connections[0].compute(runLevel);
-            double d2 = connections[1].compute(runLevel);
+            double d1 = connections[0].compute();
+            double d2 = connections[1].compute();
             delta = (d1 + d2) - minConnectionDistance;
         }
         connectCount++;
@@ -221,7 +221,7 @@ public class Point {
 
     public IndexedPath next(int index) {
         IndexedPath ip = null;
-        while (index < paths.size() - 1) {
+        while (index < paths.size()) {
             index++;
             int key = sortIndex.get(index);
             Path p = paths.get(key);
@@ -260,7 +260,6 @@ public class Point {
         if (connections[0] != null) {
             Point t = connections[0].target(this);
             if (t.equals(target)) {
-                connections[0].length(0);
                 t.updateChain(-1);
                 connections[0] = null;
                 connectCount--;
@@ -271,7 +270,6 @@ public class Point {
         if (connections[1] != null) {
             Point t = connections[1].target(this);
             if (t.equals(target)) {
-                connections[1].length(0);
                 t.updateChain(-1);
                 connections[1] = null;
                 connectCount--;
@@ -301,7 +299,6 @@ public class Point {
         int i1 = sortIndex.get(0);
         int i2 = sortIndex.get(1);
         minConnectionDistance = paths.get(i1).actualLength() + paths.get(i2).actualLength();
-        minLength = paths.get(i1).actualLength();
     }
 
     public double height(@NonNull Point B) {

@@ -4,11 +4,10 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.codekutter.lazyman.common.Config;
 import com.codekutter.lazyman.common.LogUtils;
+import com.codekutter.lazyman.core.*;
+import com.codekutter.lazyman.core.model.*;
 import com.codekutter.lazyman.ui.Helper;
 import com.codekutter.lazyman.ui.Viewer;
-import com.codekutter.lazyman.v2.iterators.L0RunIteration;
-import com.codekutter.lazyman.v2.iterators.L1RunIteration;
-import com.codekutter.lazyman.v2.iterators.L2RunIteration;
 import com.codekutter.lazyman.v2.model.Journey;
 import com.codekutter.lazyman.v2.model.Path;
 import com.codekutter.lazyman.v2.model.Point;
@@ -41,19 +40,6 @@ public class Run {
     @Setter(AccessLevel.NONE)
     private DataReader reader;
     private double tourDistance = -1;
-    private int runLevel = 0;
-
-    private RunIteration getRunIteration(int runLevel,
-                                         int iterations,
-                                         int startIndex) {
-        if (runLevel == 0) {
-            return new L0RunIteration(iterations, startIndex, reader.cache());
-        } else if (runLevel == 1) {
-            return new L1RunIteration(iterations, startIndex, reader.cache());
-        } else {
-            return new L2RunIteration(iterations, startIndex, reader.cache());
-        }
-    }
 
     private void run() {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(config));
@@ -79,8 +65,7 @@ public class Run {
             int iterations = 0;
             int startIndex = 0;
             while (true) {
-                //if (runLevel > 1) break;
-                RunIteration iteration = getRunIteration(runLevel, iterations, startIndex);
+                RunIteration iteration = new RunIteration(iterations, startIndex, reader.cache());
                 iteration.run();
                 String outf = iteration.print();
                 if (iteration.isCompleted()) {
@@ -102,9 +87,7 @@ public class Run {
                             break;
                         }
                         previous = iteration;
-                        //journey.check();
-
-                        runLevel++;
+                        journey.check();
                         continue;
                     }
                 } else if (previous != null) {
@@ -120,8 +103,6 @@ public class Run {
                 previous = iteration;
                 previous.save();
                 iterations++;
-                if (runLevel == 0)
-                    runLevel++;
             }
             if (processor == null) {
                 Journey journey = new Journey(previous.points());
