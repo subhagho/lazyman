@@ -221,8 +221,10 @@ public class Point {
 
     public IndexedPath next(int index) {
         IndexedPath ip = null;
-        while (index < paths.size()) {
+        while (true) {
             index++;
+            if (index >= sortIndex.size()) break;
+
             int key = sortIndex.get(index);
             Path p = paths.get(key);
             if (!isConnectedTo(p)) {
@@ -352,7 +354,7 @@ public class Point {
 
     @Override
     public String toString() {
-        return String.format("{%d} [%f, %f, %f] (%d)", sequence, X, Y, elevation, chainLength);
+        return String.format("{%d}[%4.2f](%d)", sequence, elevation, chainLength);
     }
 
     public int compare(@NonNull Point other) {

@@ -9,7 +9,7 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public class JourneyProcessor {
     private final Cache cache;
-    private Journey journey;
+    private final Journey journey;
 
     public JourneyProcessor(@NonNull Cache cache,
                             @NonNull Journey journey) {

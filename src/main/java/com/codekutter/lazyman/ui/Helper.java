@@ -11,6 +11,7 @@ import com.brunomnsilva.smartgraph.graphview.SmartPlacementStrategy;
 import com.codekutter.lazyman.common.LogUtils;
 import com.codekutter.lazyman.v2.model.Journey;
 import com.codekutter.lazyman.v2.model.Path;
+import com.codekutter.lazyman.v2.model.PathRoute;
 import com.codekutter.lazyman.v2.model.Point;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -45,8 +46,8 @@ public class Helper {
         GraphView view = new GraphView();
         Map<String, Vertex<Point>> points = new HashMap<>();
         Map<String, Edge<String, Point>> paths = new HashMap<>();
-        for (LinkedList<Point> tour : journey.route()) {
-            for (Point point : tour) {
+        for (PathRoute tour : journey.route()) {
+            for (Point point : tour.route()) {
                 if (point.X() < Helper.minX) {
                     Helper.minX = point.X();
                 }
@@ -161,8 +162,8 @@ public class Helper {
             for (SmartGraphVertex<V> vertex : vertices) {
                 Vertex<Point> pv = (Vertex<Point>) vertex.getUnderlyingVertex();
                 Point p = pv.element();
-                double x = (p.X() - Helper.minX) * (width - 32) / (Helper.maxX - Helper.minX);
-                double y = (p.Y() - Helper.minY) * (height - 32) / (Helper.maxY - Helper.minY);
+                double x = (p.X() - Helper.minX) * (width) / (Helper.maxX - Helper.minX);
+                double y = (p.Y() - Helper.minY) * (height) / (Helper.maxY - Helper.minY);
                 vertex.setPosition(x, y);
             }
         }

@@ -10,6 +10,7 @@ import com.codekutter.lazyman.ui.Helper;
 import com.codekutter.lazyman.ui.Viewer;
 import com.codekutter.lazyman.v2.model.Journey;
 import com.codekutter.lazyman.v2.model.Path;
+import com.codekutter.lazyman.v2.model.PathRoute;
 import com.codekutter.lazyman.v2.model.Point;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -87,7 +88,6 @@ public class Run {
                             break;
                         }
                         previous = iteration;
-                        journey.check();
                         continue;
                     }
                 } else if (previous != null) {
@@ -95,7 +95,13 @@ public class Run {
                         LogUtils.warn(getClass(), String.format("Stuck after [%d] iteration.", iterations));
                         break;
                     }
-
+                    if (iterations > 1500) {
+                        LogUtils.warn(getClass(), String.format("Breaking after [%d] iteration.", iterations));
+                        previous = iteration;
+                        break;
+                    }
+                    previous = iteration;
+                    continue;
                 }
                 if (iterations % 500 == 0) {
                     LogUtils.info(getClass(), String.format("Completed [%d] iterations...", iterations));
@@ -166,15 +172,15 @@ public class Run {
             builder.append("COMPLETE : ").append(journey.isComplete()).append("\n");
             builder.append("TOUR_SECTION\n");
             if (journey.isComplete()) {
-                LinkedList<Point> tour = journey.route().get(0);
-                for (Point point : tour) {
+                PathRoute tour = journey.route().get(0);
+                for (Point point : tour.route()) {
                     builder.append(point.sequence() + 1).append("\n");
                 }
             } else {
                 int count = 0;
-                for (LinkedList<Point> tour : journey.route()) {
+                for (PathRoute tour : journey.route()) {
                     builder.append("-----TOUR ").append(count).append("-----\n");
-                    for (Point point : tour) {
+                    for (Point point : tour.route()) {
                         builder.append(point.sequence() + 1).append("\n");
                     }
                     builder.append("------END ").append(count).append("-----\n");

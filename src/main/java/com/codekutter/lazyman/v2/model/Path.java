@@ -31,14 +31,16 @@ public class Path implements Comparable<Path> {
         Preconditions.checkNotNull(A);
         Preconditions.checkNotNull(B);
         double h = A.height(B);
-        return compute(h, length) - (1.0 / (1 + A().chainLength()));
+        return compute(h, length, A);// - (1.0 / (1 + A().chainLength()));
     }
 
-    public double compute(double height, double length) {
+    public double compute(double height, double length, Point point) {
         Preconditions.checkNotNull(A);
         Preconditions.checkNotNull(B);
-        //return Math.sqrt(((height * height) + (length * length))/2);
-        return Math.sqrt((Math.pow(length, 2) + (height)));
+        double d = Math.sqrt(((height * height) + (length * length)));
+        int c1 = point.chainLength();
+        int c2 = A.chainLength();
+        return d + ((c1 * c2) / (d * d));
     }
 
     @Override
@@ -97,6 +99,6 @@ public class Path implements Comparable<Path> {
     }
 
     public String edgeString() {
-        return String.format("%s {%f}", pathKey(), actualLength);
+        return String.format("%d:%d=%5.2f", A.sequence(), B.sequence(), actualLength);
     }
 }

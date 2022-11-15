@@ -84,6 +84,10 @@
             <id>confluent</id>
             <url>https://packages.confluent.io/maven/</url>
         </repository>
+        <repository>
+            <id>GS</id>
+            <url>https://maven.imagej.net/content/repositories/public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -153,7 +157,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.13.2.2</version>
+            <version>2.13.4.1</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -176,6 +180,12 @@
             <groupId>org.jzy3d</groupId>
             <artifactId>jzy3d-javafx</artifactId>
             <version>1.0.2</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.github.graphstream/gs-ui-javafx -->
+        <dependency>
+            <groupId>com.github.graphstream</groupId>
+            <artifactId>gs-ui-javafx</artifactId>
+            <version>2.0</version>
         </dependency>
 
     </dependencies>

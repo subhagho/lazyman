@@ -19,10 +19,18 @@ public class Journey {
         public boolean isStart() {
             return current.equals(start);
         }
+
+        public PathRoute route() {
+            PathRoute route = new PathRoute();
+            for (Point point : tour) {
+                route.add(point);
+            }
+            return route;
+        }
     }
 
     private final List<Point> points;
-    private List<LinkedList<Point>> route;
+    private List<PathRoute> route;
     private double distance = 0;
 
     public Journey(@NonNull List<Point> points) {
@@ -87,7 +95,7 @@ public class Journey {
 
     private boolean closeRing(Pointers pointers) {
         boolean ret = true;
-        route.add(pointers.tour);
+        route.add(pointers.route());
         pointers.tour = new LinkedList<>();
         pointers.index = findNextIndex(pointers.visited);
         if (pointers.index < 0) ret = false;
@@ -107,15 +115,5 @@ public class Journey {
 
     public boolean isComplete() {
         return route.size() == 1;
-    }
-
-    public void check() {
-        for (LinkedList<Point> ring : route) {
-            if (ring.size() <= 3) {
-                for (Point p : ring) {
-                    p.clearConnections();
-                }
-            }
-        }
     }
 }

@@ -40,15 +40,43 @@ public class RunIteration {
 
     private void allocate(Point point) throws Exception {
         for (Path path : point.connections()) {
-            if (path != null) continue;
             int index = -1;
+            double cost = 0;
+            if (path != null) {
+                cost = currentCost(point, path);
+            }
             while (index < point.paths().size()) {
                 IndexedPath p = point.next(index);
                 if (p == null) break;
                 index = p.index();
-                if (reserve(point, p)) break;
+                if (path != null) {
+                    if (checkReserved(point, p, path, cost)) break;
+                } else if (reserve(point, p)) break;
             }
         }
+    }
+
+    private double currentCost(Point p, Path path) {
+        return path.compute(p.elevation(), path.length(), p);
+    }
+
+    private boolean checkReserved(Point point, IndexedPath pp, Path current, double cost) throws Exception {
+        Path path = pp.path();
+        Point t = path.target(point);
+        if (!t.canConnect() && pp.next() != null) {
+            Path p = t.longest();
+            if (p != null) {
+                if (check(point, p, path, pp.next(), current, cost)) {
+                    return true;
+                } else {
+                    p = t.nextConnection(p);
+                    if (p != null) {
+                        return check(point, p, path, pp.next(), current, cost);
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private boolean reserve(Point point, IndexedPath pp) throws Exception {
@@ -76,6 +104,37 @@ public class RunIteration {
         return false;
     }
 
+    private void disconnect(Point point, Path path) throws Exception {
+        Point t = path.target(point);
+        t.disconnect(point);
+        point.disconnect(t);
+    }
+
+    private boolean check(Point point,
+                          Path assigned,
+                          Path path,
+                          Path next,
+                          Path current,
+                          double cost) throws Exception {
+        Point t = path.target(point);
+        double d1 = assigned.compute();
+        double h = next.actualLength() - path.actualLength();
+        double l = point.computeDelta(path);
+        double d2 = path.compute(h, l, point);
+        if (d2 > d1 && d2 < cost) {
+            disconnect(t, assigned);
+            disconnect(point, current);
+
+            point.connect(path);
+            t.connect(path);
+            t.elevation(h);
+            path.length(l);
+            return true;
+        }
+        return false;
+    }
+
+
     private boolean check(Point point,
                           Path assigned,
                           Path path,
@@ -84,7 +143,7 @@ public class RunIteration {
         double d1 = assigned.compute();
         double h = next.actualLength() - path.actualLength();
         double l = point.computeDelta(path);
-        double d2 = path.compute(h, l);
+        double d2 = path.compute(h, l, point);
         if (d2 > d1) {
             Point p2 = assigned.target(t);
             t.disconnect(p2);
@@ -92,7 +151,7 @@ public class RunIteration {
 
             point.connect(path);
             t.connect(path);
-            t.elevation(point.elevation() + h);
+            t.elevation(h);
             path.length(l);
             return true;
         }

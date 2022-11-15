@@ -14,21 +14,20 @@ STYLESHEET FOR JAVAFXGRAPH VISUALIZATION
 }
 
 .vertex-label {
-    -fx-font: bold 8pt "sans-serif";
+    -fx-font: bold 6pt "sans-serif";
 }
 
 .edge {
-    -fx-stroke-width: 2;
-    -fx-stroke: #FF6D66;
-    -fx-stroke-dash-array: 2 5 2 5; /* remove for clean edges */
+    -fx-stroke-width: 1;
+    -fx-stroke: #DC143C;
     -fx-fill: transparent; /*important for curved edges */
     -fx-stroke-line-cap: round;
     -fx-opacity: 0.8;
 }
 
 .edgeO {
-    -fx-stroke-width: 2;
-    -fx-stroke: #F7DC6F;
+    -fx-stroke-width: 1;
+    -fx-stroke: #2F4F4F;
     -fx-fill: transparent; /*important for curved edges */
     -fx-stroke-line-cap: round;
     -fx-opacity: 0.8;
