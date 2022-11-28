@@ -56,8 +56,9 @@ public class RunIteration {
         }
     }
 
-    private double currentCost(Point p, Path path) {
-        return path.compute(p.elevation(), path.length(), p);
+    private double currentCost(Point p, Path path) throws Exception {
+        Point t = path.target(p);
+        return path.compute(p.elevation(), path.length(), t);
     }
 
     private boolean checkReserved(Point point, IndexedPath pp, Path current, double cost) throws Exception {
@@ -122,6 +123,7 @@ public class RunIteration {
         double l = point.computeDelta(path);
         double d2 = path.compute(h, l, point);
         if (d2 > d1 && d2 < cost) {
+            Point tt = assigned.target(t);
             disconnect(t, assigned);
             disconnect(point, current);
 
@@ -146,8 +148,7 @@ public class RunIteration {
         double d2 = path.compute(h, l, point);
         if (d2 > d1) {
             Point p2 = assigned.target(t);
-            t.disconnect(p2);
-            p2.disconnect(t);
+            disconnect(t, assigned);
 
             point.connect(path);
             t.connect(path);

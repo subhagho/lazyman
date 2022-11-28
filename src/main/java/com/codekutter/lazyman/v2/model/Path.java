@@ -1,5 +1,6 @@
 package com.codekutter.lazyman.v2.model;
 
+import com.codekutter.lazyman.v2.utils.Utils;
 import com.google.common.base.Preconditions;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -31,30 +32,21 @@ public class Path implements Comparable<Path> {
         Preconditions.checkNotNull(A);
         Preconditions.checkNotNull(B);
         double h = A.height(B);
-        return compute(h, length, A);// - (1.0 / (1 + A().chainLength()));
+        return compute(h, length, A);
     }
 
     public double compute(double height, double length, Point point) {
         Preconditions.checkNotNull(A);
         Preconditions.checkNotNull(B);
         double d = Math.sqrt(((height * height) + (length * length)));
-        int c1 = point.chainLength();
-        int c2 = A.chainLength();
-        return d + ((c1 * c2) / (d * d));
+        double c1 = ((double) point.chainLength());
+        double c2 = ((double) A.chainLength());
+        return d;// + ((c1 * c2) / (d * d));
     }
 
     @Override
     public int compareTo(@NonNull Path o) {
-        double d = (actualLength - o.actualLength);
-        int ret = 0;
-        if (d > 1 || d < -1) {
-            ret = (int) d;
-        } else if (d < 1 && d > 0) {
-            ret = 1;
-        } else if (d < 0) {
-            ret = -1;
-        }
-        return ret;
+        return Utils.compareTo(actualLength, o.actualLength);
     }
 
     @Override

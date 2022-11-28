@@ -1,5 +1,6 @@
 package com.codekutter.lazyman.v2.model;
 
+import com.codekutter.lazyman.v2.utils.Utils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.Getter;
@@ -19,11 +20,13 @@ public class Point {
     private double delta = 0;
     private double minConnectionDistance = 0;
     private double minLength = 0;
+    private double minLength2 = 0;
     private final Map<Integer, Path> paths;
     private List<Integer> sortIndex;
     private final Path[] connections = new Path[2];
     private int connectCount = 0;
     private int chainLength = 0;
+    private final List<Point> targets = new ArrayList<>();
 
     public Point(int sequence,
                  @NonNull Double X,
@@ -46,10 +49,13 @@ public class Point {
         delta = point.delta;
         minConnectionDistance = point.minConnectionDistance();
         minLength = point.minLength();
+        minLength2 = point.minLength2;
         paths = point.paths;
         sortIndex = point.sortIndex;
         connections[0] = point.connections[0];
         connections[1] = point.connections[1];
+        this.targets.clear();
+        this.targets.addAll(point.targets);
     }
 
     public void add(@NonNull Path path) throws Exception {
@@ -152,7 +158,7 @@ public class Point {
         }
         Path p2 = connections[1];
         if (p2 == null) return p1;
-        if (p1.actualLength() > p2.actualLength()) {
+        if (p1.compute() > p2.compute()) {
             return p1;
         } else {
             return p2;
@@ -249,8 +255,7 @@ public class Point {
             curr = connections[1];
         }
         if (curr == null) {
-            d -= minLength;
-            d += minConnectionDistance;
+            d += minLength;
         } else {
             double d1 = curr.actualLength();
             d += d1;
@@ -301,6 +306,26 @@ public class Point {
         int i1 = sortIndex.get(0);
         int i2 = sortIndex.get(1);
         minConnectionDistance = paths.get(i1).actualLength() + paths.get(i2).actualLength();
+        minLength = paths.get(i1).actualLength();
+        minLength2 = paths.get(i2).actualLength();
+    }
+
+    public double getDelta(@NonNull Path path) throws Exception {
+        Path other = null;
+        if (connections[0] != null && connections[0].equals(path)) {
+            other = connections[1];
+        } else if (connections[1] != null && connections[1].equals(path)) {
+            other = connections[0];
+        } else {
+            throw new Exception(String.format("Path not connected to. [path=%s]", path));
+        }
+        if (other == null) {
+            return path.actualLength() - minLength;
+        } else if (path.actualLength() > other.actualLength()) {
+            return path.actualLength() - minLength2;
+        } else {
+            return path.actualLength() - minLength;
+        }
     }
 
     public double height(@NonNull Point B) {
@@ -358,14 +383,7 @@ public class Point {
     }
 
     public int compare(@NonNull Point other) {
-        double ret = X - other.X;
-        if (ret == 0) {
-            ret = Y - other.Y;
-        }
-        if (ret < -1 || ret > 1) return (int) ret;
-        else if (ret < 0) return -1;
-        else if (ret > 0) return 1;
-        else return 0;
+        return Utils.compareTo(X, other.X);
     }
 
     public String hashKey() {

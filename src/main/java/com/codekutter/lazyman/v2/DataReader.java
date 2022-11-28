@@ -74,7 +74,6 @@ public class DataReader implements Closeable {
         } else if (dt instanceof EdgeWeightMatrix) {
             readEdgeWeightMatrix((EdgeWeightMatrix) dt);
         }
-        cache.postLoad();
     }
 
     private void readEdgeWeightMatrix(EdgeWeightMatrix matrix) throws Exception {

@@ -8,9 +8,8 @@ import com.codekutter.lazyman.core.*;
 import com.codekutter.lazyman.core.model.*;
 import com.codekutter.lazyman.ui.Helper;
 import com.codekutter.lazyman.ui.Viewer;
-import com.codekutter.lazyman.v2.model.Journey;
+import com.codekutter.lazyman.v2.model.*;
 import com.codekutter.lazyman.v2.model.Path;
-import com.codekutter.lazyman.v2.model.PathRoute;
 import com.codekutter.lazyman.v2.model.Point;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -28,6 +27,8 @@ import java.util.*;
 @Getter
 @Setter
 public class Run {
+    public static final int MAX_BIDS = 9;
+
     @Parameter(names = {"--config", "-c"}, description = "Configuration Properties file.", required = true)
     private String config;
     @Parameter(names = {"--data", "-d"}, description = "TSP Input Data file.", required = true)
@@ -42,26 +43,99 @@ public class Run {
     private DataReader reader;
     private double tourDistance = -1;
 
-    private void run() {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(config));
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(tspData));
-        JourneyProcessor processor = null;
-        try {
-            Config.init(config);
-            DataType type = DataType.TSP;
-            if (!Strings.isNullOrEmpty(tspDataType)) {
-                type = DataType.valueOf(tspDataType);
-            }
-            reader = new DataReader(tspData, type);
-            reader.read();
-            reader.load();
-
-            if (!Strings.isNullOrEmpty(tourfile)) {
-                reader.readTours(tourfile);
-                if (reader.tours() != null && !reader.tours().isEmpty()) {
-                    computeTourDistance(reader.tours(), reader.cache());
+    private void computeBids() throws Exception {
+        for (Point point : reader.cache().pointList(0)) {
+            int index = -1;
+            while (index < point.paths().size()) {
+                IndexedPath p = point.next(index);
+                if (p == null) {
+                    break;
+                }
+                index = p.index();
+                Point t = p.path().target(point);
+                if (p.next() == null) {
+                    reader.cache().setBid(point.sequence(), t, Double.MIN_VALUE);
+                } else {
+                    double d = p.path().actualLength() - point.minLength();
+                    double h = p.next().actualLength() - p.path().actualLength();
+                    double b = p.path().compute(h, d, point);
+                    reader.cache().setBid(point.sequence(), t, b);
                 }
             }
+        }
+        reader.cache().sortBids();
+    }
+
+    private void compareBids() throws Exception {
+        for (Point point : reader.cache().pointList(0)) {
+            int count = 0;
+            List<Cache.PointBid> current = reader.cache().bids().get(point.sequence());
+            for (Cache.PointBid bid : current) {
+                if (bid.sequence == point.sequence()) continue;
+
+                int index = MAX_BIDS - count;
+
+                List<Cache.PointBid> target = reader.cache().bids().get(bid.sequence);
+                double tb = target.get(index).bid;
+                if (bid.bid <= tb) {
+                    point.targets().add(bid.point);
+                    count++;
+                }
+                if (count == MAX_BIDS) break;
+            }
+            LogUtils.info(getClass(), String.format("[%s][Target bid count = %d]", point.toString(), count));
+        }
+    }
+
+    private void setup() throws Exception {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(config));
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(tspData));
+
+        Config.init(config);
+        DataType type = DataType.TSP;
+        if (!Strings.isNullOrEmpty(tspDataType)) {
+            type = DataType.valueOf(tspDataType);
+        }
+        reader = new DataReader(tspData, type);
+        reader.read();
+        reader.load();
+
+        if (!Strings.isNullOrEmpty(tourfile)) {
+            reader.readTours(tourfile);
+            if (reader.tours() != null && !reader.tours().isEmpty()) {
+                computeTourDistance(reader.tours(), reader.cache());
+            }
+        }
+        reader.cache().postLoad();
+        computeBids();
+        compareBids();
+    }
+
+    private void runV3() {
+        try {
+            setup();
+
+            RunIteratorV3 runner = new RunIteratorV3(0, 0, reader.cache());
+            runner.run();
+            Journey journey = runner.journey();
+            if (journey == null) {
+                throw new Exception("No complete journey generated...");
+            }
+            if (view) {
+                Helper.journey = journey;
+                Helper.tours = reader.tours();
+                Viewer.show();
+            }
+        } catch (Exception ex) {
+            LogUtils.error(getClass(), ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private void run() {
+        JourneyProcessor processor = null;
+        try {
+            setup();
             RunIteration previous = null;
             int iterations = 0;
             int startIndex = 0;
@@ -197,7 +271,7 @@ public class Run {
         try {
             Run r = new Run();
             JCommander.newBuilder().addObject(r).build().parse(argv);
-            r.run();
+            r.runV3();
         } catch (Throwable t) {
             LogUtils.error(Run.class, t);
             t.printStackTrace();
