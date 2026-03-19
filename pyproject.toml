@@ -27,9 +27,17 @@ classifiers = [
 dev = [
   "pytest>=8.0",
 ]
+viz = [
+  "numpy>=1.26",
+  "scipy>=1.12",
+  "scikit-image>=0.22",
+  "pyvista>=0.44",
+]
 
 [project.scripts]
 lazyman = "lazyman.cli:main"
+lazyman-viz3d = "lazyman.viz3d:main"
+lazyman-viz3d-demo = "lazyman.demo.demo_viz3d:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
