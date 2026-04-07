@@ -260,6 +260,32 @@ def next_larger_point_index_memmap(
     return _next_larger_in_lookup(current_value, lookup)
 
 
+def next_center_value_index_entry(
+    center_index: CenterValueIndex,
+    current_offset: int,
+    *,
+    y_index: int | None = None,
+    z_index: int | None = None,
+) -> tuple[float, Pair] | None:
+    """
+    Return the next ``(value, (y, z))`` entry from the center index.
+
+    ``current_offset`` is relative to the selected slice:
+    - use ``-1`` to get the first entry
+    - use ``0`` to get the second entry
+
+    Optional ``y_index`` or ``z_index`` restricts the iteration to
+    ``(center, y_index, ?)`` or ``(center, ?, z_index)`` respectively.
+    """
+    _validate_center_value_index(center_index)
+    values, pairs = _lookup_for_optional_filters(
+        center_index,
+        y_index=y_index,
+        z_index=z_index,
+    )
+    return _next_entry_in_lookup(values, pairs, current_offset)
+
+
 def _build_lookup(
     values: "np.ndarray",
     y_indexes: "np.ndarray",
@@ -337,6 +363,33 @@ def _lookup_for_constraint(
     raise ValueError(f"unsupported constraint: {constraint}")
 
 
+def _lookup_for_optional_filters(
+    center_index: CenterValueIndex,
+    *,
+    y_index: int | None,
+    z_index: int | None,
+) -> tuple["np.ndarray", "np.ndarray"]:
+    if y_index is not None and z_index is not None:
+        raise ValueError("at most one of y_index or z_index may be provided")
+    if y_index is not None:
+        _validate_node_index(center_index.size, y_index)
+        return _slice_grouped_lookup(
+            center_index.y_offsets,
+            center_index.y_values,
+            center_index.y_pairs,
+            y_index,
+        )
+    if z_index is not None:
+        _validate_node_index(center_index.size, z_index)
+        return _slice_grouped_lookup(
+            center_index.z_offsets,
+            center_index.z_values,
+            center_index.z_pairs,
+            z_index,
+        )
+    return (center_index.all_values, center_index.all_pairs)
+
+
 def _slice_grouped_lookup(
     offsets: "np.ndarray",
     values: "np.ndarray",
@@ -360,6 +413,22 @@ def _next_larger_in_lookup(
 
     next_y, next_z = sorted_pairs[next_position]
     return (int(next_y), int(next_z))
+
+
+def _next_entry_in_lookup(
+    values: "np.ndarray",
+    pairs: "np.ndarray",
+    current_offset: int,
+) -> tuple[float, Pair] | None:
+    if current_offset < -1:
+        raise ValueError("current_offset must be >= -1")
+
+    next_offset = current_offset + 1
+    if next_offset >= int(values.shape[0]):
+        return None
+
+    next_pair = pairs[next_offset]
+    return (float(values[next_offset]), (int(next_pair[0]), int(next_pair[1])))
 
 
 def _validate_distance_matrix(distance_matrix: "np.ndarray") -> int:
@@ -401,10 +470,8 @@ def _validate_tensor_indexes(
 ) -> None:
     size = int(tensor.shape[0])
     _validate_center_index(tensor, center)
-    if y_index < 0 or y_index >= size:
-        raise IndexError(f"node index out of range: {y_index}")
-    if z_index < 0 or z_index >= size:
-        raise IndexError(f"node index out of range: {z_index}")
+    _validate_node_index(size, y_index)
+    _validate_node_index(size, z_index)
 
 
 def _validate_center_value_index(center_index: CenterValueIndex) -> None:
@@ -434,6 +501,11 @@ def _validate_offset_array(offsets: "np.ndarray", size: int) -> None:
         raise ValueError("center index offsets must be 1-dimensional")
     if offsets.shape[0] != size + 1:
         raise ValueError("center index offsets must have length size + 1")
+
+
+def _validate_node_index(size: int, node_index: int) -> None:
+    if node_index < 0 or node_index >= size:
+        raise IndexError(f"node index out of range: {node_index}")
 
 
 def _resolve_center_index_root(
